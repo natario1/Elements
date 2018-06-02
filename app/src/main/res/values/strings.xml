@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Elements Showcase</string>
+
+    <string name="menu_paged">Paged</string>
+    <string name="menu_paged_on_click">Click-paged</string>
+    <string name="menu_shuffle">Shuffle</string>
+    <string name="menu_headers">Headers</string>
+    <string name="menu_empty">Empty</string>
+    <string name="menu_complete">Complete</string>
+</resources>
