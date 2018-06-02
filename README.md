@@ -76,28 +76,35 @@ Let's say we have a `Source` called `ContactsSource` that can display X items pe
 Adapter.builder(lifecycle)
     .addSource(ContactsSource(itemsPerPage = Int.MAX_VALUE))
     .into(recyclerView)
-    
+```
+
+```kotlin    
 // Good: Split into pages of 10 contacts. When the 10-th element is requested,
 // the adapter will request the source for a new page of elements.
 Adapter.builder(lifecycle, 10)
     .addSource(ContactsSource(itemsPerPage = 10))
     .into(recyclerView)
-    
+```
+
+```kotlin    
 // Better: Split into pages of 10 contacts, but request the next page when the 7-th
 // is shown. This means that our network request will be fired earlier and the user will
 // wait less time when scrolling.
 Adapter.builder(lifecycle, 7)
     .addSource(ContactsSource(itemsPerPage = 10))
     .into(recyclerView)
-    
-    
+```
+
+```kotlin        
 // The source loads 10 item, and the adapter won't ask for more.
 // You can, however, call adapter.openPage() when needed, for example
 // when a 'load more...' button is clicked.
 Adapter.builder(lifecycle)
     .addSource(ContactsSource(itemsPerPage = 10))
     .into(recyclerView)
+```
 
+```kotlin
 // Error: the source loads everything, but when the 10-th element is requested,
 // the adapter tries to open another page. No big deal anyway.
 Adapter.builder(lifecycle, 10)
@@ -122,7 +129,7 @@ These are the main tasks:
 |Holder initialization|`onInitialize(Holder)`|The holder was created. You can perform here initialization task that do not depend on data (like color filters to icon), or add Views and object to the Holder cache using `Holder.set(key, data)` and `Holder.get(key)`.|
 |Binding|`onBind(Page, Holder, Element<T>)`|Bind data, contained in the given `Element`, to the view held by `Holder`.|
 
-Presenters also accept a **click listener** that will be automatically added to each view.
+Presenters also **accept a click listener** that will be automatically added to each view.
 The click listener will be added to the root view of the Holder, or, if found, to a child view that
 has the id `R.id.click`. This way you can still use the provided listener for internal clicks.
 
@@ -144,7 +151,7 @@ For now, let's look at the main callbacks and APIs:
 When posting results, the list of `T` data is converted to a list of `Element<T>` object.
 The source can declare the element type for each `T` data in the `getElementType(T)` callback.
 
-Subclasses also have the opportunity to change the results that were posted. See, for example, this code
+Subclasses also have the opportunity to **change the results that were posted**. See, for example, this code
 that replaces empty lists with a *this list is empty* Element:
 
 ```kotlin
