@@ -3,21 +3,21 @@
 A collection of modular elements for `RecyclerView` lists, alternative to Google's
 [Paging library](https://developer.android.com/topic/libraries/architecture/paging/), designed in Kotlin with these goals in mind:
 
-- Separation of concerns: we condensate the model component into `Source`s, and the displaying component into `Presenter`s.
+- **Separation of concerns**: we condensate the model component into `Source`s, and the UI component into `Presenter`s.
 - No need to extend `RecyclerView.Adapter`: let's get rid of this.
 - No need to extend `RecyclerView.ViewHolder`: let's get rid of this as well.
-- Reusability: as a result, each `Source` and `Presenter` is an independent piece of code that can be reused multiple times.
-- Modularity: let the adapter accept multiple `Source`s and `Presenter`s.
-- Testability: an obvious consequence of the above.
-- Dependencies: let `Source`s declare dependencies among them, in a `CoordinatorLayout.Behavior` fashion.
-- Abstractness: leave the base implementation as abstract and open as possible.
-- Paging: built-in concept of `Page`.
-- Kotlin: Use idiomatic Kotlin patterns.
-- Integration with Architecture components: heavy use of `LiveData` and `Lifecycle`s, extensions for data binding.
+- **Reusability**: as a result, each `Source` and `Presenter` is an independent piece of code that can be reused multiple times.
+- **Modularity**: let the adapter accept multiple `Source`s and `Presenter`s.
+- **Testability**: an obvious consequence of the above.
+- **Dependencies**: let `Source`s declare dependencies among them, in a `CoordinatorLayout.Behavior` fashion.
+- **Abstractness**: leave the base implementation as abstract and open as possible.
+- **Paging**: built-in concept of `Page`.
+- **Kotlin**: Use idiomatic Kotlin patterns.
+- **Integration with Arch components**: heavy use of `LiveData` and `Lifecycle`s, extensions for data binding.
 
 If you are curious about how it works in practice, take a look at the sample app in the `app` module.
 
-## Basics
+# Basics
 
 Let's start with some basic examples:
 
@@ -53,7 +53,7 @@ Adapter.builder(lifecycle)
 
 ```
 
-### The Adapter
+## The Adapter
 
 The adapter is final and can't be extended. All it does is:
 
@@ -63,7 +63,7 @@ The adapter is final and can't be extended. All it does is:
 - manage `Element`s: [find a presenter](#elements:-binding-presenters-and-sources), and [order them based on the source behavior](#coordination-and-ordering).
 - manage [page updates](#animations-and-diffutils): computes the difference between pages using `DiffUtil`, like the Paging library does.
 
-### Paging
+## Paging
 
 The key concept is that each `Source` is independent in the number of elements that it wants to lay down
 for a given page.
@@ -108,7 +108,7 @@ Adapter.builder(lifecycle, 10)
 The library provides utilities to show loading indicators, pagination prompt buttons, attach a `LiveData` 
 object to each page, and more. See the [Extensions](#extensions) section.
 
-### Presenters
+## Presenters
 
 `Presenter`s have the responsibility of laying down elements, that is, creating `View`s and binding data to them.
 This is the simplest component and most of the time you don't even need to subclass the `Presenter` class, thanks
@@ -126,7 +126,7 @@ Presenters also accept a **click listener** that will be automatically added to 
 The click listener will be added to the root view of the Holder, or, if found, to a child view that
 has the id `R.id.click`. This way you can still use the provided listener for internal clicks.
 
-### Sources
+## Sources
 
 `Source`s have the responsibility of providing model data. They can be extremely simple and extremely complex
 if needed, through a [dependency mechanism](#coordination-and-ordering).
@@ -162,7 +162,7 @@ override fun onPostResult(page: Page, result: Result<T>): List<Element<T>> {
 At this point, you will need a presenter for the `ELEMENT_TYPE_ERROR` and `ELEMENT_TYPE_EMPTY` types.
 In fact, this is all available in our [extensions](#extensions).
 
-#### Effective pagination: page keys
+### Effective pagination: page keys
 
 For meaningful pagination, you will need a mechanism to store a key object about pages, which helps formulating
 the query for the next page. `Source`s can do this by assigning a private key of type `Any` to each page.
@@ -171,7 +171,7 @@ For example, after fetching data for page `page`, you can use `setKey(page, last
 When a new page is requested, you can use `getKey(page.previous())` to know which was the last item
 and pass meaningful constraints to your server.
 
-### Elements: Binding presenters and sources
+## Elements: Binding presenters and sources
 
 The base block of the library is the `Element` class. Each element holds our model data, 
 a reference to the source that created it, and an `Int` value called the element type.
@@ -188,7 +188,7 @@ This **element type** is the mechanism through which we link sources and present
 In case more presenters declare to be able to lay out a given type, the order in which they are added
 to the adapter counts.
 
-### Coordination and ordering
+## Coordination and ordering
 
 Sources can declare internal dependencies, like `CoordinatorLayout.Behavior`s do. This is done overriding
 the `dependsOn()` function:
@@ -218,7 +218,7 @@ public open fun insertBefore(page: Page, dependencies: List<Element<*>>, element
  
 Same goes for `insertAfter()`. Once the source has inserted all its `available` items, the methods are not called anymore.
  
-### State restoration
+## State restoration
 
 Sources hold strong references to pages and model data. This has a pleasant consequence:
 
@@ -236,7 +236,7 @@ override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 }
 ```
 
-### Animations and DiffUtils
+## Animations and DiffUtils
 
 Like the Google's Paging library, the adapter will use [`DiffUtil`](https://developer.android.com/reference/android/support/v7/util/DiffUtil)
 to compute what changed and call the appropriate `notify*` methods on the adapter.
@@ -265,7 +265,7 @@ class ContactsSource() : Source<Contact> {
 }
 ```
 
-## Extensions
+# Extensions
 
 The `elements.extensions` package provides useful implementations for sources and presenters.
 Typically we provide also static methods in the `Presenter` and `Source` classes to have even simpler
