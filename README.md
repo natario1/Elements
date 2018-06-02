@@ -4,13 +4,11 @@ A collection of modular elements for `RecyclerView` lists, alternative to Google
 [Paging library](https://developer.android.com/topic/libraries/architecture/paging/), designed in Kotlin with these goals in mind:
 
 - **Separation of concerns**: we condensate the model component into `Source`s, and the UI component into `Presenter`s.
-- No need to extend `RecyclerView.Adapter`: let's get rid of this.
-- No need to extend `RecyclerView.ViewHolder`: let's get rid of this as well.
+- **Simplicity**: No need to extend `RecyclerView.Adapter`, `RecyclerView.ViewHolder` or all these Paging lib. classes.
 - **Reusability**: as a result, each `Source` and `Presenter` is an independent piece of code that can be reused multiple times.
 - **Modularity**: let the adapter accept multiple `Source`s and `Presenter`s.
 - **Testability**: an obvious consequence of the above.
-- **Dependencies**: let `Source`s declare dependencies among them, in a `CoordinatorLayout.Behavior` fashion.
-- **Abstractness**: leave the base implementation as abstract and open as possible.
+- **Coordination**: let `Source`s declare dependencies among them, in a `CoordinatorLayout.Behavior` fashion.
 - **Paging**: built-in concept of `Page`.
 - **Kotlin**: Use idiomatic Kotlin patterns.
 - **Integration with Arch components**: heavy use of `LiveData` and `Lifecycle`s, extensions for data binding.
@@ -22,21 +20,24 @@ If you are curious about how it works in practice, take a look at the sample app
 Let's start with some basic examples:
 
 ```kotlin
-
 // Simple, single-paged list of days.
 val data = listOf("Monday", "Tuesday", "Wednesday", "Friday", "Saturday", "Sunday")
 Adapter.builder(lifecycle)
     .addSource(Source.fromList(data))
     .addPresenter(Presenter.simple(context, R.layout.item, { view, day -> view.text = day }))
     .into(recyclerView)
-    
+```
+
+```kotlin
 // Using an existing LiveData object for model data.
 val data: LiveData<String> = WeekDaysLiveData()
 Adapter.builder(lifecycle)
     .addSource(Source.fromLiveData(data))
     .addPresenter(Presenter.simple(context, R.layout.item, { view, day -> view.text = day }))
     .into(recyclerView)
-    
+```
+
+```kotlin  
 // More complex example:
 // these contacts classes do not exist, but are easy to create.
 Adapter.builder(lifecycle)
@@ -50,7 +51,6 @@ Adapter.builder(lifecycle)
     .addPresenter(Presenter.forErrorIndicator(context, R.layout.error))
     .addPresenter(Presenter.forEmptyIndicator(context, R.layout.empty))
     .into(recyclerView)
-
 ```
 
 ## The Adapter
