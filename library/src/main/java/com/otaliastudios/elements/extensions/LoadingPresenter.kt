@@ -7,6 +7,16 @@ import com.otaliastudios.elements.Element
 import com.otaliastudios.elements.Page
 import com.otaliastudios.elements.Presenter
 
+/**
+ * A [LoadingPresenter] responds to the [MainSource.ELEMENT_TYPE_LOADING] element.
+ * See the [MainSource] class for documentation.
+ *
+ * It is basically meant to display a loading progress indicator while the pages
+ * are loaded.
+ *
+ * @property layout the layout resource to be inflated.
+ * @property bind what to do when binding the loading view.
+ */
 open class LoadingPresenter(
         context: Context,
         private val layout: Int,

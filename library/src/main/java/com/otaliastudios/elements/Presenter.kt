@@ -11,6 +11,16 @@ import android.view.View
 import android.view.ViewGroup
 import com.otaliastudios.elements.extensions.*
 
+/**
+ * The base class for presenting [Element]s in the UI.
+ * Provides hook to create holders and bind them to real data.
+ *
+ * Assigns a click listener to the root view of the element,
+ * or, if present, to any other internal view with id [com.otaliastudios.elements.R.id.click].
+ *
+ * @param context an activity context
+ * @param onElementClick a click callback
+ */
 public abstract class Presenter<T: Any>(
         protected val context: Context,
         protected var onElementClick: ((Page, Holder, Element<T>) -> Unit)? = null
@@ -20,19 +30,36 @@ public abstract class Presenter<T: Any>(
 
     internal lateinit var adapter: Adapter
 
+    /**
+     * Each [Presenter] implements the [LifecycleOwner] interface,
+     * although this was not needed until now.
+     */
     override fun getLifecycle() = owner.lifecycle
 
+    /**
+     * Returns the adapter that this presenter was bound to.
+     * For this reason, you shouldn't bind a presenter to more than
+     * one adapter.
+     */
     protected fun getAdapter() = adapter
 
+    /**
+     * Returns a legit layout inflater to be used when
+     * creating holders.
+     */
     protected fun getLayoutInflater(): LayoutInflater = LayoutInflater.from(context)
 
+    /**
+     * Assigns a click listener. The click listener is applied to the root view, or,
+     * if present, to child views with the id [com.otaliastudios.elements.R.id.click].
+     */
     public open fun setOnElementClickListener(listener: ((Page, Holder, Element<T>) -> Unit)?) {
         onElementClick = listener
     }
 
     internal fun createHolder(parent: ViewGroup, elementType: Int): Holder {
         val holder = onCreate(parent, elementType)
-        onInitialize(holder)
+        onInitialize(holder, elementType)
         return holder
     }
 
@@ -45,13 +72,12 @@ public abstract class Presenter<T: Any>(
 
     /**
      * Called when the holder is instantiated, has a root view and eventually child references.
-     * The element type can be retrieved with [Holder.getElementType].
      *
      * This is the point where you would perform basic view initialization, e.g. setting a color
-     * filter to a drawable, *before* having actual values to bind. The advantage is that this
+     * filter to a drawable, before having actual values to bind. The good part is that this
      * is called just once per Holder.
      */
-    protected open fun onInitialize(holder: Holder) {}
+    protected open fun onInitialize(holder: Holder, elementType: Int) {}
 
     /**
      * Here this presenter can register to respond to certain element types, as returned by
@@ -75,27 +101,64 @@ public abstract class Presenter<T: Any>(
         }
     }
 
+    /**
+     * A final class extending [RecyclerView.ViewHolder].
+     * Holds an internal map of objects, that might be views or whatever else you need.
+     * Just use [set] and [get] to retrieve them.
+     */
     class Holder(view: View): RecyclerView.ViewHolder(view) {
         private val map: MutableMap<String, Any> = mutableMapOf()
 
+        /**
+         * Sets an object to be held by this Holder. Might be a view,
+         * or any other object you need to attach.
+         */
         public fun set(key: String, value: Any) { map[key] = value }
 
+        /**
+         * Returns an object that was previously attached to this
+         * holder using [set].
+         */
         @Suppress("UNCHECKED_CAST")
         public fun <T: Any> get(key: String): T = map[key] as T
     }
 
     companion object {
 
+        /**
+         * Creates a [SimplePresenter] with Kotlin-friendly syntax,
+         * and restricted functionality. Extend the class for more freedom.
+         */
         fun <T: Any> simple(context: Context, layoutRes: Int, elementType: Int, bind: ((View, T) -> Unit)) = SimplePresenter(context, layoutRes, elementType, bind)
 
+        /**
+         * Creates a [ErrorPresenter] with Kotlin-friendly syntax,
+         * and restricted functionality. Extend the class for more freedom.
+         */
         fun forErrorIndicator(context: Context, layoutRes: Int, bind: ((View, Exception) -> Unit)? = null) = ErrorPresenter(context, layoutRes, bind)
 
+        /**
+         * Creates a [EmptyPresenter] with Kotlin-friendly syntax,
+         * and restricted functionality. Extend the class for more freedom.
+         */
         fun forEmptyIndicator(context: Context, layoutRes: Int) = EmptyPresenter(context, layoutRes)
 
+        /**
+         * Creates a [LoadingPresenter] with Kotlin-friendly syntax,
+         * and restricted functionality. Extend the class for more freedom.
+         */
         fun forLoadingIndicator(context: Context, layoutRes: Int, bind: ((View) -> Unit)? = null) = LoadingPresenter(context, layoutRes, bind)
 
+        /**
+         * Creates a [PaginationPresenter] with Kotlin-friendly syntax,
+         * and restricted functionality. Extend the class for more freedom.
+         */
         fun forPagination(context: Context, layoutRes: Int) = PaginationPresenter(context, layoutRes)
 
+        /**
+         * Creates a [DataBindingPresenter] with Kotlin-friendly syntax,
+         * and restricted functionality. Extend the class for more freedom.
+         */
         fun <T: Any, D: ViewDataBinding> withDataBinding(context: Context, elementType: Int, factory: (LayoutInflater, ViewGroup) -> D, bind: (D, T) -> Unit) = object : DataBindingPresenter<T, D>(context) {
 
             override val elementTypes = listOf(elementType)

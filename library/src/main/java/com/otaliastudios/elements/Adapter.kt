@@ -6,6 +6,10 @@ import android.util.Log
 import android.util.SparseArray
 import android.view.ViewGroup
 
+/**
+ * Base class. Use [Builder] to create an instance with the
+ * apprioriate sources and presenters.
+ */
 public final class Adapter private constructor(
         private val lifecycleOwner: LifecycleOwner,
         private val sources: MutableList<Source<*>>,
@@ -13,37 +17,64 @@ public final class Adapter private constructor(
         private val pageSizeHint: Int
 ) : RecyclerView.Adapter<Presenter.Holder>(), LifecycleOwner, LifecycleObserver {
 
+    /**
+     * Constructs an [Adapter] with the given sources and presenters.
+     * The order of presenters matters in case of more presenters that deal with the same
+     * element types.
+     */
     public class Builder(private val lifecycleOwner: LifecycleOwner, private val pageSizeHint: Int = Int.MAX_VALUE) {
         private val sources = mutableListOf<Source<*>>()
         private val presenters = mutableListOf<Presenter<*>>()
 
+        /**
+         * Append a [Source] for this adapter.
+         * Returns this for chaining.
+         */
         public fun addSource(source: Source<*>): Builder {
             sources.add(source)
             return this
         }
 
+        /**
+         * Append a [Presenter] for this adapter.
+         * Returns this for chaining.
+         */
         public fun addPresenter(presenter: Presenter<*>): Builder {
             presenters.add(presenter)
             return this
         }
 
+        /**
+         * Builds the adapter with the given options.
+         * Use [into] to inject directly into a recycler.
+         */
         public fun build() = Adapter(lifecycleOwner, sources, presenters, pageSizeHint)
 
+        /**
+         * Builds the adapter and injects it into
+         * the given [RecyclerView].
+         */
         public fun into(recyclerView: RecyclerView) {
             recyclerView.adapter = build()
         }
     }
 
     companion object {
-        fun builder(lifecycleOwner: LifecycleOwner, expectedPageSize: Int = Int.MAX_VALUE) = Builder(lifecycleOwner, expectedPageSize)
+
+        /**
+         * Shorthand for creating a [Builder] for the given
+         * lifecycle owner and page hint.
+         */
+        fun builder(lifecycleOwner: LifecycleOwner, pageSizeHint: Int = Int.MAX_VALUE) = Builder(lifecycleOwner, pageSizeHint)
 
         private val TAG = Adapter::class.java.simpleName
-
-        private fun log(what: String) {
-            if (true) Log.e(TAG, what)
-        }
     }
 
+    /**
+     * [Adapter] implements [LifecycleOwner] and this helps in not leaking
+     * any reference while it observes sources and page state.
+     * This is the same [Lifecycle] object that was passed to the builder.
+     */
     override fun getLifecycle() = lifecycleOwner.lifecycle
 
     init {
@@ -191,12 +222,25 @@ public final class Adapter private constructor(
         })
     }
 
+    /**
+     * Returns the current item count, not considering any
+     * transaction that is being computed.
+     */
     override fun getItemCount() = pager.elementCount()
 
+    /**
+     * Returns the element type for the given position,
+     * by querying the element for that position.
+     */
     override fun getItemViewType(position: Int): Int {
         return pager.elementAt(position).element!!.type
     }
 
+    /**
+     * Tries to find a presenter for the given viewType. If not found,
+     * currently this will throw an exception.
+     * In the future we want to just do a no-op.
+     */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Presenter.Holder {
         // Find a reasonable Presenter for this elementType. Try with cache map.
         var presenter = typeMap.get(viewType)
@@ -208,13 +252,19 @@ public final class Adapter private constructor(
         return presenter.createHolder(parent, viewType)
     }
 
+    /**
+     * Binds the element at this position with the presenter that manages
+     * this element type.
+     * If something goes wrong here, there is likely a synchronization issue
+     * with pending updates. But it should be fixed now.
+     */
     @Suppress("UNCHECKED_CAST")
     override fun onBindViewHolder(holder: Presenter.Holder, position: Int) {
         val presenter = typeMap.get(holder.itemViewType) as Presenter<Any>
         val query = pager.elementAt(position)
         val page = query.page!!
         val element = query.element as Element<Any>
-        Log.w("Adapter", "onBindViewHolder, type: ${holder.itemViewType}, " +
+        Log.i("Adapter", "onBindViewHolder, type: ${holder.itemViewType}, " +
                 "elementType: ${element.type}, " +
                 "position: $position, " +
                 "presenter: ${presenter.javaClass.simpleName}, " +

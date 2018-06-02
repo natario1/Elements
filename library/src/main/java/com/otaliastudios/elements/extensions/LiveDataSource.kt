@@ -7,7 +7,7 @@ import com.otaliastudios.elements.Page
 import com.otaliastudios.elements.Source
 
 /**
- * A source that already has results inside a LiveData object and will display them
+ * A source that provides results through a LiveData object and will display them
  * in a single page.
  */
 open class LiveDataSource<T: Any>(private val data: LiveData<List<T>>, private val elementType: Int = 0) : Source<T>() {

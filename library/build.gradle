@@ -1,11 +1,16 @@
 apply plugin: 'com.android.library'
-
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'org.jetbrains.dokka-android'
 
-// Required by bintray
+// Required by https://github.com/dcendents/android-maven-gradle-plugin
 version = '0.1.0'
 group = 'com.otaliastudios'
+archivesBaseName = 'elements'
+def repo = 'Elements'
+def repoDescription = 'A modular approach to RecyclerView adapters with reusable, testable, independent, coordinated components.'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -35,3 +40,85 @@ dependencies {
     api "android.arch.lifecycle:livedata:1.1.1"
 
 }
+
+// Maven plugin.
+install {
+    repositories.mavenInstaller {
+        pom.project {
+            name repo
+            description "${repoDescription}"
+            url "https://github.com/natario1/${repo}"
+
+            packaging 'aar'
+            groupId project.group
+            artifactId project.archivesBaseName
+            version project.version
+
+            licenses {
+                license {
+                    name 'The Apache Software License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                }
+            }
+            scm {
+                connection "https://github.com/natario1/${repo}.git"
+                developerConnection "https://github.com/natario1/${repo}.git"
+                url "https://github.com/natario1/${repo}"
+            }
+            developers {
+                developer {
+                    id = 'natario1'
+                    name 'Mattia Iavarone'
+                }
+            }
+        }
+    }
+}
+
+// Gradle bintray plugin.
+// https://github.com/bintray/gradle-bintray-plugin
+Properties props = new Properties()
+props.load(project.rootProject.file('local.properties').newDataInputStream())
+def bintrayUser = props.getProperty('bintray.user')
+def bintrayKey = props.get('bintray.key')
+bintray {
+    user = bintrayUser
+    key = bintrayKey
+    configurations = ['archives']
+    pkg {
+        repo = 'android'
+        name = repo
+        licenses = ['Apache-2.0']
+        vcsUrl = "https://github.com/natario1/${repo}.git"
+        publish = true
+        override = true
+        version {
+            name = project.version
+            desc = "${repo} v. ${project.version}"
+            released = new Date()
+            vcsTag = 'v'+project.version
+        }
+    }
+}
+
+// From official sample https://github.com/bintray/bintray-examples/blob/master/gradle-aar-example/build.gradle
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.sourceFiles
+}
+
+// https://github.com/Kotlin/dokka#output_formats
+dokka {
+    outputFormat = 'html'
+    outputDirectory = "${buildDir}/dokka"
+}
+
+task dokkaJar(type: Jar, dependsOn: dokka) {
+    from "${buildDir}/dokka"
+}
+
+artifacts {
+    archives dokkaJar
+    archives sourcesJar
+}
+

@@ -1,11 +1,11 @@
 # Elements
 
-A collection of modular elements for `RecyclerView` lists, alternative to Google's
-[Paging library](https://developer.android.com/topic/libraries/architecture/paging/), designed in Kotlin with these goals in mind:
+A collection of modular elements for `RecyclerView` lists, alternative to
+[Google's Paging library](https://developer.android.com/topic/libraries/architecture/paging/), designed in Kotlin with these goals in mind:
 
 - **Separation of concerns**: we condensate the model component into `Source`s, and the UI component into `Presenter`s.
 - **Simplicity**: No need to extend `RecyclerView.Adapter`, `RecyclerView.ViewHolder` or all these Paging lib. classes.
-- **Reusability**: as a result, each `Source` and `Presenter` is an independent piece of code that can be reused multiple times.
+- **Reusability**: as a result, each `Source` and `Presenter` is an independent piece of code that can be reused.
 - **Modularity**: let the adapter accept multiple `Source`s and `Presenter`s.
 - **Testability**: an obvious consequence of the above.
 - **Coordination**: let `Source`s declare dependencies among them, in a `CoordinatorLayout.Behavior` fashion.

@@ -10,6 +10,12 @@ import com.otaliastudios.elements.Element
 import com.otaliastudios.elements.Page
 import com.otaliastudios.elements.Presenter
 
+/**
+ * The simplest possible presenter, that just loads a layout resource,
+ * responds to a given [elementType], and performs an action when binding.
+ *
+ * See also [Presenter.simple].
+ */
 open class SimplePresenter<T: Any>(
         context: Context,
         private val layout: Int,

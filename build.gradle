@@ -3,6 +3,7 @@ buildscript {
     ext {
         kotlinVersion = '1.2.41'
         androidGradlePluginVersion = '3.2.0-alpha15'
+        dokkaVersion = '0.9.17'
     }
 
     repositories {
@@ -13,6 +14,9 @@ buildscript {
     dependencies {
         classpath "com.android.tools.build:gradle:$androidGradlePluginVersion"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+        classpath "org.jetbrains.dokka:dokka-android-gradle-plugin:$dokkaVersion"
     }
 }
 

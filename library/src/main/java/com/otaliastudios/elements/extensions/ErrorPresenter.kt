@@ -7,6 +7,16 @@ import com.otaliastudios.elements.Element
 import com.otaliastudios.elements.Page
 import com.otaliastudios.elements.Presenter
 
+/**
+ * An [ErrorPresenter] responds to the [MainSource.ELEMENT_TYPE_ERROR] element.
+ * See the [MainSource] class for documentation.
+ *
+ * It is basically meant to display a 'there was an error' indicator.
+ * You also have access to the exception that was originally thrown by the source.
+ *
+ * @property layout the layout resource to be inflated.
+ * @property bind what to do when binding the error view.
+ */
 open class ErrorPresenter(
         context: Context,
         private val layout: Int,

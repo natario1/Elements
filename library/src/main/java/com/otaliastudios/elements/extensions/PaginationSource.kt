@@ -4,10 +4,20 @@ import com.otaliastudios.elements.Element
 import com.otaliastudios.elements.Page
 import com.otaliastudios.elements.Source
 
-
+/**
+ * A [PaginationSource] depends on some kind of main source and emits a single element
+ * with the [ELEMENT_TYPE] type at the end of each page.
+ *
+ * This is meant to be used with unbound adapters in conjunction with [PaginationPresenter].
+ * The provided element should be rendered as a 'Load more...' button.
+ */
 class PaginationSource(private val dependsOn: ((Source<*>) -> Boolean) = { true }) : Source<Any>() {
 
     companion object {
+
+        /**
+         * The type for the element that we provide.
+         */
         const val ELEMENT_TYPE = 1933811
     }
 

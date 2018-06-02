@@ -8,24 +8,54 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.collections.ArrayList
 import kotlin.concurrent.withLock
 
+/**
+ * A [Page] represents and holds element data for a single page.
+ * It provides utilities to update the page data on the fly, and methods
+ * to query the current page state.
+ *
+ * It uses a [Semaphore] and two different lists to manage and lock updates.
+ */
 public class Page internal constructor(internal val pager: Pager, internal val number: Int) {
 
     private val semaphore = Semaphore(1, true)
     private var elements = arrayListOf<Element<*>>()
     private var rawElements = arrayListOf<Element<*>>()
 
+    /**
+     * An immutable list of the elements in this page.
+     * Each time you call this a list is created, which might be expensive.
+     */
     public fun elements(): List<Element<*>> = Collections.unmodifiableList(elements)
 
+    /**
+     * The current size, not considering any pending update.
+     */
     public fun elementCount() = elements.size
 
     internal fun elementAt(position: Int) = elements[position]
 
+    /**
+     * Returns the previous [Page], if there is one,
+     * or null if there isn't.
+     */
     public fun previous(): Page? = pager.previous(this)
 
+    /**
+     * Returns the next [Page], if there is one,
+     * or null if there isn't.
+     */
     public fun next(): Page? = pager.next(this)
 
+    /**
+     * Returns true if this is the first page,
+     * false otherwise.
+     */
     public fun isFirstPage() = previous() == null
 
+    /**
+     * Returns true if this is the last page,
+     * false otherwise.
+     */
     public fun isLastPage() = next() == null
 
     /**
@@ -54,6 +84,8 @@ public class Page internal constructor(internal val pager: Pager, internal val n
 
     /**
      * Clear this page from any object currently present.
+     * Waits for other pending updates to finish so this can
+     * actually block the UI thread.
      */
     @UiThread
     public fun clear() {
@@ -66,6 +98,8 @@ public class Page internal constructor(internal val pager: Pager, internal val n
 
     /**
      * Insert an element at the specified position in this page.
+     * Waits for other pending updates to finish so this can
+     * actually block the UI thread.
      */
     @UiThread
     public fun insertElement(position: Int, element: Element<*>) {
@@ -81,6 +115,8 @@ public class Page internal constructor(internal val pager: Pager, internal val n
 
     /**
      * Remove an element at the specified position in this page.
+     * Waits for other pending updates to finish so this can
+     * actually block the UI thread.
      */
     @UiThread
     public fun removeElement(position: Int) {
@@ -96,6 +132,8 @@ public class Page internal constructor(internal val pager: Pager, internal val n
 
     /**
      * Remove the specified element from this page, if present.
+     * Waits for other pending updates to finish so this can
+     * actually block the UI thread.
      */
     @UiThread
     public fun removeElement(element: Element<*>) {
@@ -112,6 +150,8 @@ public class Page internal constructor(internal val pager: Pager, internal val n
 
     /**
      * Replaces the specified element with another.
+     * Waits for other pending updates to finish so this can
+     * actually block the UI thread.
      */
     @UiThread
     fun replaceElement(item: Element<*>, withItem: Element<*>) {
@@ -127,8 +167,10 @@ public class Page internal constructor(internal val pager: Pager, internal val n
     }
 
     /**
-     * Inserts the specified elements in this page, starting at position `position`,
+     * Inserts the specified elements in this page, starting at the given position,
      * relative to this page.
+     * Waits for other pending updates to finish so this can
+     * actually block the UI thread.
      */
     @UiThread
     fun insertElements(position: Int, elements: Collection<Element<*>>) {
@@ -143,8 +185,9 @@ public class Page internal constructor(internal val pager: Pager, internal val n
     }
 
     /**
-     * Replaces elements in this page in the range `position` ...
-     * `position + elements.length` with the specified elements.
+     * Replaces elements starting at the given position with the specified elements.
+     * Waits for other pending updates to finish so this can
+     * actually block the UI thread.
      */
     @UiThread
     fun replaceElements(position: Int, vararg elements: Element<*>) {
@@ -164,7 +207,9 @@ public class Page internal constructor(internal val pager: Pager, internal val n
     }
 
     /**
-     * Removes up to `count` elements starting at position `position`.
+     * Removes up to count elements starting at the given position.
+     * Waits for other pending updates to finish so this can
+     * actually block the UI thread.
      */
     @UiThread
     fun removeElements(position: Int, count: Int) {
@@ -182,6 +227,11 @@ public class Page internal constructor(internal val pager: Pager, internal val n
         }
     }
 
+    /**
+     * Notifies that the element at the given position has changed.
+     * Waits for other pending updates to finish so this can
+     * actually block the UI thread.
+     */
     @UiThread
     fun notifyItemChanged(position: Int) {
         val list = startUpdate()
@@ -193,14 +243,23 @@ public class Page internal constructor(internal val pager: Pager, internal val n
         }
     }
 
+    /**
+     * We need a fast implementation for equals().
+     */
     override fun equals(other: Any?): Boolean {
         return other != null && other is Page && other.number == number
     }
 
+    /**
+     * A fast hash code function.
+     */
     override fun hashCode(): Int {
         return number
     }
 
+    /**
+     * Provides details about this page.
+     */
     override fun toString(): String {
         return "Page number: $number, elements: ${elementCount()}, updating: ${semaphore.availablePermits() == 0}"
     }
