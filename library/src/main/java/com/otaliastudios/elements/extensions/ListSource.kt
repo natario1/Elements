@@ -8,7 +8,7 @@ import com.otaliastudios.elements.Source
  * A source that already has results inside a list and will display them
  * in a single page.
  */
-class ListSource<T: Any>(private val list: List<T>, private val elementType: Int = 0) : Source<T>() {
+open class ListSource<T: Any>(private val list: List<T>, private val elementType: Int = 0) : Source<T>() {
 
     override fun dependsOn(source: Source<*>) = false
 

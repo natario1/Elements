@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
                     "(that is, when you scroll down) depending on the pageSize value that is passed " +
                     "to the adapter constructor.\n\n" +
                     "Our Source simulates slow network fetching, so the loading indicator is displayed. " +
-                    "To achieve this, extend BaseSource to provide data, and add a LoadingPresenter." +
+                    "To achieve this, extend MainSource to provide data, and add a LoadingPresenter." +
                     "A good estimation of the page size can lead to seamless loads without even showing the indicator.\n\n" +
                     "Note: This message is also part of the list, using a separate source with the insertBefore feature."
             Adapter.builder(this, 9)
@@ -130,7 +130,7 @@ class MainActivity : AppCompatActivity() {
     class EmptyFragment : BaseFragment() {
 
         override fun setUp(recyclerView: RecyclerView) {
-            val message = "This is what happens when a BaseSource posts an empty list as a result. " +
+            val message = "This is what happens when a MainSource posts an empty list as a result. " +
                     "It will automatically pass an 'empty' element that you can present with a EmptyPresenter." +
                     "The same happens when such source posts an Exception. To handle this case, use an ErrorPresenter.\n\n" +
                     "Note: This message is also part of the list, using a separate source with the insertBefore feature."

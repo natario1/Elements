@@ -1,7 +1,6 @@
 package com.otaliastudios.elements
 
 import android.arch.lifecycle.*
-import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.util.SparseArray
@@ -11,10 +10,10 @@ public final class Adapter private constructor(
         private val lifecycleOwner: LifecycleOwner,
         private val sources: MutableList<Source<*>>,
         private val presenters: List<Presenter<*>>,
-        private val expectedPageSize: Int
+        private val pageSizeHint: Int
 ) : RecyclerView.Adapter<Presenter.Holder>(), LifecycleOwner, LifecycleObserver {
 
-    public class Builder(private val lifecycleOwner: LifecycleOwner, private val expectedPageSize: Int = Int.MAX_VALUE) {
+    public class Builder(private val lifecycleOwner: LifecycleOwner, private val pageSizeHint: Int = Int.MAX_VALUE) {
         private val sources = mutableListOf<Source<*>>()
         private val presenters = mutableListOf<Presenter<*>>()
 
@@ -28,7 +27,7 @@ public final class Adapter private constructor(
             return this
         }
 
-        public fun build() = Adapter(lifecycleOwner, sources, presenters, expectedPageSize)
+        public fun build() = Adapter(lifecycleOwner, sources, presenters, pageSizeHint)
 
         public fun into(recyclerView: RecyclerView) {
             recyclerView.adapter = build()
@@ -226,14 +225,14 @@ public final class Adapter private constructor(
         }
         presenter.onBind(page, holder, element)
 
-        if (query.positionInPage == expectedPageSize - 1 && page.isLastPage()) {
+        if (query.positionInPage == pageSizeHint - 1 && page.isLastPage()) {
             pager.requestPage()
         }
     }
 
     /**
      * Request a new page to be opened.
-     * This can be used in conjunction with an infinite [expectedPageSize],
+     * This can be used in conjunction with an infinite [pageSizeHint],
      * in order to disable automatic page opening.
      */
     public fun openPage() {

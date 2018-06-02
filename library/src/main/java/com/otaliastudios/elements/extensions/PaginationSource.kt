@@ -35,10 +35,10 @@ class PaginationSource(private val dependsOn: ((Source<*>) -> Boolean) = { true 
     }
 
     // Ensure that we have at least some element and that it has some data.
-    // This works better with BaseSource. We don't want the button if the page is a loading indicator.
+    // This works better with MainSource. We don't want the button if the page is a loading indicator.
     private fun maybePostResult(page: Page, dependencies: List<Element<*>>) {
         if (dependencies.isNotEmpty() && dependencies.any { it.data != null }) {
-            postResult(page, listOf(createElementWithType(ELEMENT_TYPE, null)))
+            postResult(page, listOf(createEmptyElement(ELEMENT_TYPE)))
         }
     }
 

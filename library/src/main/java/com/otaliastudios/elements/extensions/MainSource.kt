@@ -6,7 +6,7 @@ import com.otaliastudios.elements.Page
 import com.otaliastudios.elements.Source
 
 
-abstract class BaseSource<T: Any>(private val loadingEnabled: Boolean = true) : Source<T>() {
+abstract class MainSource<T: Any>(private val loadingEnabled: Boolean = true) : Source<T>() {
 
     companion object {
         const val ELEMENT_TYPE_LOADING = 1936817
@@ -26,18 +26,18 @@ abstract class BaseSource<T: Any>(private val loadingEnabled: Boolean = true) : 
 
     protected fun notifyLoading(page: Page) {
         if (loadingEnabled) {
-            val list = listOf(createElementWithType(ELEMENT_TYPE_LOADING, null))
+            val list = listOf(createEmptyElement(ELEMENT_TYPE_LOADING))
             postResult(page, list)
         }
     }
 
     override fun onPostResult(page: Page, result: Result<T>): List<Element<T>> {
-        if (page.previous() == null) {
+        if (page.isFirstPage()) {
             if (result.error != null) {
                 val error = result.error
-                return listOf(createElementWithType(ELEMENT_TYPE_ERROR, null, error))
+                return listOf(createEmptyElement(ELEMENT_TYPE_ERROR, error))
             } else if (result.values.isEmpty()) {
-                return listOf(createElementWithType(ELEMENT_TYPE_EMPTY, null))
+                return listOf(createEmptyElement(ELEMENT_TYPE_EMPTY))
             }
         }
         return super.onPostResult(page, result)

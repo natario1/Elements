@@ -19,7 +19,7 @@ open class SimplePresenter<T: Any>(
 
     override val elementTypes = listOf(elementType)
 
-    override fun onCreateHolder(parent: ViewGroup, elementType: Int): Holder {
+    override fun onCreate(parent: ViewGroup, elementType: Int): Holder {
         return Holder(getLayoutInflater().inflate(layout, parent, false))
     }
 

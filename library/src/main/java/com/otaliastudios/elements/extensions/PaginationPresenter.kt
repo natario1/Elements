@@ -17,7 +17,7 @@ class PaginationPresenter(
 
     override val elementTypes = listOf(PaginationSource.ELEMENT_TYPE)
 
-    override fun onCreateHolder(parent: ViewGroup, elementType: Int): Holder {
+    override fun onCreate(parent: ViewGroup, elementType: Int): Holder {
         return Holder(getLayoutInflater().inflate(layout, parent, false))
     }
 

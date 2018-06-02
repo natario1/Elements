@@ -32,7 +32,7 @@ class BottomPresenter(context: Context, listener: ((Page, Holder, Element<Int>) 
         })
     }
 
-    override fun onCreateHolder(parent: ViewGroup, elementType: Int): Holder {
+    override fun onCreate(parent: ViewGroup, elementType: Int): Holder {
         return Holder(getLayoutInflater().inflate(R.layout.item_bottom, parent, false))
     }
 

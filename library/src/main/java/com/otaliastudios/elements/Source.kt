@@ -5,6 +5,8 @@ import android.arch.lifecycle.MediatorLiveData
 import android.arch.lifecycle.MutableLiveData
 import com.otaliastudios.elements.extensions.ListSource
 import com.otaliastudios.elements.extensions.LiveDataSource
+import com.otaliastudios.elements.extensions.PaginationSource
+import kotlin.reflect.KClass
 
 abstract class Source<T: Any> {
 
@@ -19,11 +21,11 @@ abstract class Source<T: Any> {
         return data.map { createElement(it) }
     }
 
-    protected fun createElementWithType(type: Int, data: T?, extra: Any? = null): Element<T> {
-        return Element(this, type, data, extra)
+    protected fun createEmptyElement(type: Int, extra: Any? = null): Element<T> {
+        return Element(this, type, null, extra)
     }
 
-    protected fun postResult(page: Page, result: Result<T>) {
+    private fun postResult(page: Page, result: Result<T>) {
         map[page]!!.postValue(result)
     }
 
@@ -31,16 +33,16 @@ abstract class Source<T: Any> {
         postResult(page, Result(createElements(data)))
     }
 
-    protected fun postResult(page: Page, data: List<Element<T>>) {
-        postResult(page, Result(data))
+    protected fun postResult(page: Page, elements: List<Element<T>>) {
+        postResult(page, Result(elements))
     }
 
     protected fun postResult(page: Page, error: Exception) {
         postResult(page, Result(listOf(), error))
     }
 
-    protected fun postResult(page: Page, data: LiveData<List<T>>) {
-        map[page]!!.attach(data)
+    protected fun postResult(page: Page, liveData: LiveData<List<T>>) {
+        map[page]!!.attach(liveData)
     }
 
     protected fun setKey(page: Page, key: Any) {
@@ -122,5 +124,6 @@ abstract class Source<T: Any> {
     companion object {
         fun <T: Any> fromList(list: List<T>, elementType: Int = 0) = ListSource(list, elementType)
         fun <T: Any> fromLiveData(data: LiveData<List<T>>, elementType: Int = 0) = LiveDataSource(data, elementType)
+        fun forPagination(dependency: KClass<Source<*>>) = PaginationSource({ it::class == dependency })
     }
 }

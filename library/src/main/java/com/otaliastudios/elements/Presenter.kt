@@ -1,6 +1,5 @@
 package com.otaliastudios.elements
 
-import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleOwner
 import android.content.Context
 import android.databinding.ViewDataBinding
@@ -32,7 +31,7 @@ public abstract class Presenter<T: Any>(
     }
 
     internal fun createHolder(parent: ViewGroup, elementType: Int): Holder {
-        val holder = onCreateHolder(parent, elementType)
+        val holder = onCreate(parent, elementType)
         onInitialize(holder)
         return holder
     }
@@ -41,7 +40,7 @@ public abstract class Presenter<T: Any>(
      * Asks to return an Holder for the given elementType.
      * You can retrieve a layout inflater using [getLayoutInflater].
      */
-    protected abstract fun onCreateHolder(parent: ViewGroup, elementType: Int): Holder
+    protected abstract fun onCreate(parent: ViewGroup, elementType: Int): Holder
 
 
     /**

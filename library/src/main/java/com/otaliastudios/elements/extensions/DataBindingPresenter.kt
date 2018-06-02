@@ -14,7 +14,7 @@ abstract class DataBindingPresenter<T: Any, DB: ViewDataBinding>(
 ) : Presenter<T>(context, onElementClick) {
 
 
-    final override fun onCreateHolder(parent: ViewGroup, elementType: Int): Holder {
+    final override fun onCreate(parent: ViewGroup, elementType: Int): Holder {
         val binding = onCreateBinding(parent, elementType)
         val holder = Holder(binding.root)
         holder.set("binding", binding)
@@ -25,7 +25,9 @@ abstract class DataBindingPresenter<T: Any, DB: ViewDataBinding>(
 
     override fun onBind(page: Page, holder: Holder, element: Element<T>) {
         super.onBind(page, holder, element)
-        onBind(page, holder.get<DB>("binding"), element)
+        val binding = holder.get<DB>("binding")
+        onBind(page, binding, element)
+        binding.executePendingBindings()
     }
 
     protected open fun onBind(page: Page, binding: DB, element: Element<T>) {

@@ -28,7 +28,7 @@ abstract class HeaderSource<Anchor: Any, Header: Any>() : Source<HeaderSource.Da
 
     override fun getElementType(data: Data<Anchor, Header>) = ELEMENT_TYPE
 
-    class Data<Anchor: Any, Header: Any>(val anchor: Anchor, val header: Header)
+    data class Data<Anchor: Any, Header: Any>(val anchor: Anchor, val header: Header)
 
     companion object {
         public const val ELEMENT_TYPE = 127831782

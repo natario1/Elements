@@ -28,7 +28,7 @@ abstract class FooterSource<Anchor: Any, Footer: Any>() : Source<FooterSource.Da
 
     override fun getElementType(data: Data<Anchor, Footer>) = ELEMENT_TYPE
 
-    class Data<Anchor: Any, Footer: Any>(val anchor: Anchor, val footer: Footer)
+    data class Data<Anchor: Any, Footer: Any>(val anchor: Anchor, val footer: Footer)
 
     companion object {
         public const val ELEMENT_TYPE = 127831783

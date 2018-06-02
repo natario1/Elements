@@ -1,14 +1,11 @@
 package com.otaliastudios.elements.sample.sources
 
 import android.annotation.SuppressLint
-import android.os.Handler
 import com.otaliastudios.elements.Element
 import com.otaliastudios.elements.Page
-import com.otaliastudios.elements.Source
-import com.otaliastudios.elements.extensions.BaseSource
-import com.otaliastudios.elements.sample.Cheese
+import com.otaliastudios.elements.extensions.MainSource
 
-class EmptySource : BaseSource<String>() {
+class EmptySource : MainSource<String>() {
 
     override fun areItemsTheSame(first: String, second: String): Boolean {
         return first == second

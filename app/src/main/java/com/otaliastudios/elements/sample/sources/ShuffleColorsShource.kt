@@ -5,12 +5,6 @@ import android.os.Handler
 import com.otaliastudios.elements.Element
 import com.otaliastudios.elements.Page
 import com.otaliastudios.elements.Source
-import com.otaliastudios.elements.extensions.BaseSource
-import com.otaliastudios.elements.extensions.ListSource
-import com.otaliastudios.elements.sample.Cheese
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.math.nextDown
 
 class ShuffleColorsShource(private val delayMillis: Long = 3000) : Source<Int>() {
 
