@@ -13,7 +13,7 @@ A collection of modular elements for `RecyclerView` lists, alternative to
 - **Integration with Arch components**: heavy use of `LiveData` and `Lifecycle`s, extensions for data binding.
 
 ```groovy
-implementation 'com.otaliastudios:elements:0.1.0'
+implementation 'com.otaliastudios:elements:0.1.1'
 ```
 
 If you are curious about how it works in practice, take a look at the sample app in the `app` module.
