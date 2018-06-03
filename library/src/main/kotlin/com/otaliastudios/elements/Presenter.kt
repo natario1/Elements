@@ -129,7 +129,7 @@ public abstract class Presenter<T: Any>(
          * Creates a [SimplePresenter] with Kotlin-friendly syntax,
          * and restricted functionality. Extend the class for more freedom.
          */
-        fun <T: Any> simple(context: Context, layoutRes: Int, elementType: Int, bind: ((View, T) -> Unit)) = SimplePresenter(context, layoutRes, elementType, bind)
+        fun <T: Any> simple(context: Context, layoutRes: Int, elementType: Int, bind: ((View, T) -> Unit)? = null) = SimplePresenter(context, layoutRes, elementType, bind)
 
         /**
          * Creates a [ErrorPresenter] with Kotlin-friendly syntax,
