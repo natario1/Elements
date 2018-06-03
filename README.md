@@ -3,14 +3,13 @@
 A collection of modular elements for `RecyclerView` lists, alternative to
 [Google's Paging library](https://developer.android.com/topic/libraries/architecture/paging/), designed in Kotlin with these goals in mind:
 
-- **Separation of concerns**: we condensate the model component into `Source`s, and the UI component into `Presenter`s.
-- **Simplicity**: No need to extend `RecyclerView.Adapter`, `RecyclerView.ViewHolder` or all these Paging lib. classes.
+- **Separation of concerns**: we split the model component into `Source`s, and the UI component into `Presenter`s.
+- **Simplicity**: No need to extend Adapters, ViewHolders or all that Paging lib. boilerplate.
 - **Reusability**: as a result, each `Source` and `Presenter` is an independent piece of code that can be reused.
 - **Modularity**: let the adapter accept multiple `Source`s and `Presenter`s.
 - **Testability**: a consequence of the above, each component can be independently tested.
 - **Coordination**: let `Source`s declare dependencies among them, in a `CoordinatorLayout.Behavior` fashion.
 - **Paging**: built-in concept of `Page`.
-- **Kotlin**: Use idiomatic Kotlin patterns.
 - **Integration with Arch components**: heavy use of `LiveData` and `Lifecycle`s, extensions for data binding.
 
 ```groovy
@@ -129,8 +128,8 @@ These are the main tasks:
 
 |Task|Function|Description|
 |----|--------|-----------|
-|Holder creation|`onCreate(ViewGroup, Int): Holder`|Here you must provide a `Holder` instance, typically inflating a layout resource.|
-|Holder initialization|`onInitialize(Holder)`|The holder was created. You can perform here initialization task that do not depend on data (like color filters to icon), or add Views and object to the Holder cache using `Holder.set(key, data)` and `Holder.get(key)`.|
+|Holder creation|`onCreate(ViewGroup, Int)`|Here you must provide a `Holder` instance, typically inflating a layout resource.|
+|Holder initialization|`onInitialize(Holder, Int)`|The holder was created. You can perform here initialization task that do not depend on data (like color filters to icon), or add Views and object to the Holder cache using `Holder.set(key, data)` and `Holder.get(key)`.|
 |Binding|`onBind(Page, Holder, Element<T>)`|Bind data, contained in the given `Element`, to the view held by `Holder`.|
 
 Presenters also **accept a click listener** that will be automatically added to each view.
