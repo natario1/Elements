@@ -7,11 +7,15 @@ A collection of modular elements for `RecyclerView` lists, alternative to
 - **Simplicity**: No need to extend `RecyclerView.Adapter`, `RecyclerView.ViewHolder` or all these Paging lib. classes.
 - **Reusability**: as a result, each `Source` and `Presenter` is an independent piece of code that can be reused.
 - **Modularity**: let the adapter accept multiple `Source`s and `Presenter`s.
-- **Testability**: an obvious consequence of the above.
+- **Testability**: a consequence of the above, each component can be independently tested.
 - **Coordination**: let `Source`s declare dependencies among them, in a `CoordinatorLayout.Behavior` fashion.
 - **Paging**: built-in concept of `Page`.
 - **Kotlin**: Use idiomatic Kotlin patterns.
 - **Integration with Arch components**: heavy use of `LiveData` and `Lifecycle`s, extensions for data binding.
+
+```groovy
+implementation 'com.otaliastudios:elements:0.1.0'
+```
 
 If you are curious about how it works in practice, take a look at the sample app in the `app` module.
 
