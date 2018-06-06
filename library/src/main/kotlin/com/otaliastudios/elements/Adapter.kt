@@ -159,6 +159,7 @@ public final class Adapter private constructor(
         // Now that sources are OK, let's subscribe to any LiveData they already have.
         var existingPage: Page? = null
         sources.forEach { source ->
+            source.bind(this)
             source.getCurrentResults().forEach {
                 existingPage = it.key
                 onSourceLiveData(it.key, source, it.value)
@@ -173,6 +174,9 @@ public final class Adapter private constructor(
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     private fun onDestroy() {
         pager.unbind()
+        sources.forEach {
+            it.unbind(this)
+        }
     }
 
     /**

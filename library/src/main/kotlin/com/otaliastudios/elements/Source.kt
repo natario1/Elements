@@ -31,6 +31,7 @@ abstract class Source<T: Any> {
 
     private val map: MutableMap<Page, ResultProvider> = mutableMapOf()
     private val keys: MutableMap<Page, Any?> = mutableMapOf()
+    private val adapters: MutableList<Adapter> = mutableListOf()
 
     internal fun knowsPage(page: Page) = map.containsKey(page)
 
@@ -209,6 +210,19 @@ abstract class Source<T: Any> {
     public open fun areContentsTheSame(first: T, second: T) = first == second
 
     /**
+     * Request a new page after the given page.
+     * This is a no-op if the page is not the last page, and if
+     * there are currently no adapters bound to this Source.
+     */
+    protected fun requestPage(after: Page) {
+        if (after.isLastPage()) {
+            for (adapter in adapters) {
+                adapter.openPage()
+            }
+        }
+    }
+
+    /**
      * Represents the results of a [postResult] call. Includes a possibly empty list of elements,
      * and a possibly null exception.
      * Sources can override the actual result during [onPostResult].
@@ -240,6 +254,14 @@ abstract class Source<T: Any> {
                 }
             })
         }
+    }
+
+    internal fun bind(adapter: Adapter) {
+        adapters.add(adapter)
+    }
+
+    internal fun unbind(adapter: Adapter) {
+        adapters.remove(adapter)
     }
 
     companion object {
