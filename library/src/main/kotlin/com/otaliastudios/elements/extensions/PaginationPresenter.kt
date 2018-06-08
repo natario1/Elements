@@ -31,8 +31,10 @@ class PaginationPresenter(
     }
 
     init {
-        setOnElementClickListener { _, _, _ ->
-            getAdapter().openPage()
+        setOnElementClickListener { page, _, _ ->
+            if (page.isLastPage()) {
+                getAdapter().openPage()
+            }
         }
     }
 }

@@ -16,8 +16,14 @@ import com.otaliastudios.elements.Source
  * You typically don't want more than one [MainSource] in a single list.
  *
  * @property loadingIndicatorsEnabled whether we should add loading indicators when the page is opened and changed
+ * @property errorIndicatorEnabled whether we should emit an error indicator when the source posts an error
+ * @property emptyIndicatorEnabled whether we should emit an empty indicator when the source posts an empty list
  */
-abstract class MainSource<T: Any>(private val loadingIndicatorsEnabled: Boolean = true) : Source<T>() {
+abstract class MainSource<T: Any>(
+        private val loadingIndicatorsEnabled: Boolean = true,
+        private val errorIndicatorEnabled: Boolean = true,
+        private val emptyIndicatorEnabled: Boolean = true
+) : Source<T>() {
 
     companion object {
         /**
@@ -61,10 +67,10 @@ abstract class MainSource<T: Any>(private val loadingIndicatorsEnabled: Boolean 
 
     override fun onPostResult(page: Page, result: Result<T>): List<Element<T>> {
         if (page.isFirstPage()) {
-            if (result.error != null) {
+            if (errorIndicatorEnabled && result.error != null) {
                 val error = result.error
                 return listOf(createEmptyElement(ELEMENT_TYPE_ERROR, error))
-            } else if (result.values.isEmpty()) {
+            } else if (emptyIndicatorEnabled && result.values.isEmpty()) {
                 return listOf(createEmptyElement(ELEMENT_TYPE_EMPTY))
             }
         }

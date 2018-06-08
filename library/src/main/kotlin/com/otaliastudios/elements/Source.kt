@@ -7,6 +7,7 @@ import com.otaliastudios.elements.extensions.ListSource
 import com.otaliastudios.elements.extensions.LiveDataSource
 import com.otaliastudios.elements.extensions.PaginationPresenter
 import com.otaliastudios.elements.extensions.PaginationSource
+import com.otaliastudios.elements.extensions.DividerSource
 import kotlin.reflect.KClass
 
 /**
@@ -280,6 +281,11 @@ abstract class Source<T: Any> {
         /**
          * Creates a [PaginationSource].
          */
-        fun forPagination(dependency: KClass<Source<*>>) = PaginationSource({ it::class == dependency })
+        fun forPagination(dependency: Source<*>) = PaginationSource({ it == dependency })
+
+        /**
+         * Creates a [DividerSource].
+         */
+        fun forDividers(dependency: Source<*>) = DividerSource({ it == dependency })
     }
 }

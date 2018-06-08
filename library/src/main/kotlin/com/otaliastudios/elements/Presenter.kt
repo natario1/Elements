@@ -156,6 +156,11 @@ public abstract class Presenter<T: Any>(
         fun forPagination(context: Context, layoutRes: Int) = PaginationPresenter(context, layoutRes)
 
         /**
+         * Creates a [DividerPresenter] to display dividers.
+         */
+        fun forDividers(context: Context, layoutRes: Int) = DividerPresenter(context, layoutRes)
+
+        /**
          * Creates a [DataBindingPresenter] with Kotlin-friendly syntax,
          * and restricted functionality. Extend the class for more freedom.
          */

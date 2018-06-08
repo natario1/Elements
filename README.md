@@ -13,10 +13,13 @@ A collection of modular elements for `RecyclerView` lists, alternative to
 - **Integration with Arch components**: heavy use of `LiveData` and `Lifecycle`s, extensions for data binding.
 
 ```groovy
-implementation 'com.otaliastudios:elements:0.1.1'
+implementation 'com.otaliastudios:elements:0.1.2.7'
 ```
 
 If you are curious about how it works in practice, take a look at the sample app in the `app` module.
+Missing, but planned for the future:
+
+- **Animations**: each presenter should be able to define remove and add animations based on the element type. For example, we could animate data insertions but avoid animating headers, dividers or ads.
 
 # Basics
 
@@ -293,6 +296,11 @@ Pagination prompts:
 - [`PaginationSource` / `Source.forPagination()`](#paginationsource-and-paginationpresenter)
 - [`PaginationPresenter` / `Presenter.forPagination()`](#paginationsource-and-paginationpresenter)
 
+Dividers:
+
+- [`DividerSource` / `Source.forDividers()`](#dividersource-and-dividerpresenter)
+- [`DividerPresenter` / `Presenter.forDividers()`](#dividersource-and-dividerpresenter)
+
 
 Simple sources:
 
@@ -360,10 +368,27 @@ These elements are appended at the end of a page. The `PaginationPresenter` will
 and ask the adapter for a new page.
 
 ```kotlin
+val source = ContactsSource()
 Adapter.builder(this)
-    .addSource(ContactsSource())
-    .addSource(Source.forPagination(ContactsSource::class)) // Add below contacts
+    .addSource(source)
+    .addSource(Source.forPagination(source)) // Add below contacts
     .addPresenter(Presenter.forPagination(this, R.layout.load_more))
+    .into(recycler)
+```
+
+#### DividerSource and DividerPresenter
+
+When you have multiple sources you might want to add dividers among the items of a Source, but not all of the others.
+For example, you might now want dividers between ads.
+In this case, a divider source emits `DividerSource.ELEMENT_TYPE` elements that are caught and displayed
+by the divider presenter.
+
+```kotlin
+val source = ContactsSource()
+Adapter.builder(this)
+    .addSource(source)
+    .addSource(Source.forDividers(source))
+    .addPresenter(Presenter.forDividers(this, R.layout.divider))
     .into(recycler)
 ```
 

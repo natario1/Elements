@@ -244,6 +244,23 @@ public class Page internal constructor(internal val pager: Pager, internal val n
     }
 
     /**
+     * Notifies that the element has changed.
+     * Waits for other pending updates to finish so this can
+     * actually block the UI thread.
+     */
+    @UiThread
+    fun notifyItemChanged(element: Element<*>) {
+        val list = startUpdate()
+        val index = list.indexOf(element)
+        if (index >= 0) {
+            endUpdate()
+            pager.notifyPageItemChanged(this, index)
+        } else {
+            endUpdate()
+        }
+    }
+
+    /**
      * We need a fast implementation for equals().
      */
     override fun equals(other: Any?): Boolean {
