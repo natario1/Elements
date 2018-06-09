@@ -1,7 +1,7 @@
 package com.otaliastudios.elements
 
-import android.arch.lifecycle.*
-import android.support.v7.widget.RecyclerView
+import androidx.lifecycle.*
+import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
 import android.util.SparseArray
 import android.view.ViewGroup
@@ -15,7 +15,7 @@ public final class Adapter private constructor(
         private val sources: MutableList<Source<*>>,
         private val presenters: List<Presenter<*>>,
         private val pageSizeHint: Int
-) : RecyclerView.Adapter<Presenter.Holder>(), LifecycleOwner, LifecycleObserver {
+) : androidx.recyclerview.widget.RecyclerView.Adapter<Presenter.Holder>(), LifecycleOwner, LifecycleObserver {
 
     /**
      * Constructs an [Adapter] with the given sources and presenters.
@@ -54,7 +54,7 @@ public final class Adapter private constructor(
          * Builds the adapter and injects it into
          * the given [RecyclerView].
          */
-        public fun into(recyclerView: RecyclerView) {
+        public fun into(recyclerView: androidx.recyclerview.widget.RecyclerView) {
             recyclerView.adapter = build()
         }
     }

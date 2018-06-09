@@ -2,8 +2,8 @@ package com.otaliastudios.elements
 
 import android.os.Handler
 import android.os.Looper
-import android.support.v7.util.DiffUtil
-import android.support.v7.util.ListUpdateCallback
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListUpdateCallback
 import android.util.Log
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
@@ -27,8 +27,6 @@ internal class Pager(private val sources: List<Source<*>>) {
         if (sources.any { it.getKnownPages().isNotEmpty() }) {
             throw RuntimeException("Created a pager with sources that already have pages.")
         }
-        val page = Page(this, 0)
-        pages.add(page)
     }
 
     private fun countBefore(page: Page): Int {
@@ -41,8 +39,8 @@ internal class Pager(private val sources: List<Source<*>>) {
     }
 
     internal fun requestPage() {
-        val last = pages.last()
-        val new = Page(this, last.number + 1)
+        val number = if (pages.isEmpty()) 0 else pages.last().number + 1
+        val new = Page(this, number)
         pages.add(new)
         adapter?.onPageCreated(new)
     }
@@ -73,13 +71,14 @@ internal class Pager(private val sources: List<Source<*>>) {
     }
 
     /**
-     * We are bound to the adapter. Notify him of the
-     * page we created during initialization.
+     * Initialize ourselves when the adapter binds to us.
+     * This means creating the first page if we haven't.
      */
     internal fun bind(adapter: Adapter) {
+        if (this.adapter != null) throw IllegalStateException("This pager is already bound to an adapter.")
         this.adapter = adapter
-        for (page in pages) {
-            adapter.onPageCreated(page)
+        if (pages.isEmpty()) {
+            requestPage()
         }
     }
 

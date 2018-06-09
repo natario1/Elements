@@ -1,6 +1,6 @@
 package com.otaliastudios.elements
 
-import android.support.annotation.UiThread
+import androidx.annotation.UiThread
 import java.util.*
 import java.util.concurrent.Semaphore
 import java.util.concurrent.locks.Lock

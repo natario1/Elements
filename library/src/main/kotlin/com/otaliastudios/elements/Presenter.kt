@@ -1,14 +1,14 @@
 package com.otaliastudios.elements
 
-import android.arch.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleOwner
 import android.content.Context
-import android.databinding.ViewDataBinding
-import android.support.annotation.CallSuper
-import android.support.annotation.UiThread
-import android.support.v7.widget.RecyclerView
+import androidx.annotation.CallSuper
+import androidx.annotation.UiThread
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.databinding.ViewDataBinding
 import com.otaliastudios.elements.extensions.*
 
 /**
@@ -106,7 +106,7 @@ public abstract class Presenter<T: Any>(
      * Holds an internal map of objects, that might be views or whatever else you need.
      * Just use [set] and [get] to retrieve them.
      */
-    class Holder(view: View): RecyclerView.ViewHolder(view) {
+    class Holder(view: View): androidx.recyclerview.widget.RecyclerView.ViewHolder(view) {
         private val map: MutableMap<String, Any> = mutableMapOf()
 
         /**

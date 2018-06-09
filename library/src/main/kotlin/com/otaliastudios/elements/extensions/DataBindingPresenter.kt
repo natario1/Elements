@@ -1,9 +1,9 @@
 package com.otaliastudios.elements.extensions
 
 import android.content.Context
-import android.databinding.ViewDataBinding
 import android.view.View
 import android.view.ViewGroup
+import androidx.databinding.ViewDataBinding
 import com.otaliastudios.elements.Element
 import com.otaliastudios.elements.Page
 import com.otaliastudios.elements.Presenter

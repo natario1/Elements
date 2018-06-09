@@ -1,6 +1,6 @@
 package com.otaliastudios.elements.extensions
 
-import android.support.annotation.CallSuper
+import androidx.annotation.CallSuper
 import com.otaliastudios.elements.Element
 import com.otaliastudios.elements.Page
 import com.otaliastudios.elements.Source

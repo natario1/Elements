@@ -1,8 +1,8 @@
 package com.otaliastudios.elements
 
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MediatorLiveData
-import android.arch.lifecycle.MutableLiveData
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
 import com.otaliastudios.elements.extensions.ListSource
 import com.otaliastudios.elements.extensions.LiveDataSource
 import com.otaliastudios.elements.extensions.PaginationPresenter

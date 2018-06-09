@@ -9,7 +9,7 @@ apply plugin: 'com.jfrog.bintray'
 // Working: https://github.com/Faltenreich/TextInputView/blob/develop/textinputview/deploy.gradle
 
 ext {
-    libVersion = '0.1.2.7'
+    libVersion = '0.1.2.9'
     libGroup = 'com.otaliastudios'
     libName = 'Elements'
     libDescription = 'A modular approach to RecyclerView adapters with reusable, testable, independent, coordinated components.'
@@ -44,9 +44,8 @@ android {
 
 dependencies {
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
-    api "com.android.support:recyclerview-v7:$supportLibVersion"
-    api "com.google.android.gms:play-services-tasks:15.0.1"
-    api "android.arch.lifecycle:livedata:1.1.1"
+    api "androidx.recyclerview:recyclerview:$recyclerVersion"
+    api "androidx.lifecycle:lifecycle-livedata:$lifecycleVersion"
 }
 
 task sourcesJar(type: Jar) {
