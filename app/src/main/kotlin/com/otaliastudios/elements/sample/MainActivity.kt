@@ -12,6 +12,7 @@ import android.widget.TextView
 import com.otaliastudios.elements.*
 import com.otaliastudios.elements.extensions.*
 import com.otaliastudios.elements.sample.presenters.BottomPresenter
+import com.otaliastudios.elements.sample.presenters.TopMessagePresenter
 import com.otaliastudios.elements.sample.sources.*
 
 class MainActivity : AppCompatActivity() {
@@ -78,9 +79,9 @@ class MainActivity : AppCompatActivity() {
                     "Note: This message is also part of the list, using a separate source with the insertBefore feature."
             Adapter.builder(this, 9)
                 .addSource(CheeseSource(10))
-                .addSource(TopMessageSource(message, 1))
+                .addSource(TopMessageSource(message))
                 .addPresenter(Presenter.simple<String>(context, R.layout.item_cheese, 0, { view, data -> (view as TextView).text = data}))
-                .addPresenter(Presenter.simple<String>(context, R.layout.item_top, 1, { view, data -> (view as TextView).text = data}))
+                .addPresenter(TopMessagePresenter(context))
                 .addPresenter(Presenter.forLoadingIndicator(context, R.layout.item_loading))
                 .into(recyclerView)
         }
@@ -99,10 +100,10 @@ class MainActivity : AppCompatActivity() {
                     "Note: This message is also part of the list, using a separate source with the insertBefore feature."
             Adapter.builder(this)
                 .addSource(CheeseSource(10))
-                .addSource(TopMessageSource(message, 1))
+                .addSource(TopMessageSource(message))
                 .addSource(PaginationSource({ it is CheeseSource }))
                 .addPresenter(Presenter.simple<String>(context, R.layout.item_cheese, 0, { view, data -> (view as TextView).text = data}))
-                .addPresenter(Presenter.simple<String>(context, R.layout.item_top, 1, { view, data -> (view as TextView).text = data}))
+                .addPresenter(TopMessagePresenter(context))
                 .addPresenter(Presenter.forLoadingIndicator(context, R.layout.item_loading))
                 .addPresenter(Presenter.forPagination(context, R.layout.item_pagination))
                 .into(recyclerView)
@@ -120,9 +121,9 @@ class MainActivity : AppCompatActivity() {
                     "Note: This message is also part of the list, using a separate source with the insertBefore feature."
             Adapter.builder(this)
                 .addSource(ShuffleColorsShource())
-                .addSource(TopMessageSource(message, 1))
+                .addSource(TopMessageSource(message))
                 .addPresenter(Presenter.simple<Int>(context, R.layout.item_color, 0, { view, data -> view.setBackgroundColor(data)}))
-                .addPresenter(Presenter.simple<String>(context, R.layout.item_top, 1, { view, data -> (view as TextView).text = data}))
+                .addPresenter(TopMessagePresenter(context))
                 .into(recyclerView)
         }
     }
@@ -136,9 +137,9 @@ class MainActivity : AppCompatActivity() {
                     "Note: This message is also part of the list, using a separate source with the insertBefore feature."
             Adapter.builder(this)
                 .addSource(EmptySource())
-                .addSource(TopMessageSource(message, 1))
-                .addPresenter(Presenter.forErrorIndicator(context, R.layout.item_empty))
-                .addPresenter(Presenter.simple<String>(context, R.layout.item_top, 1, { view, data -> (view as TextView).text = data}))
+                .addSource(TopMessageSource(message))
+                .addPresenter(Presenter.forEmptyIndicator(context, R.layout.item_empty))
+                .addPresenter(TopMessagePresenter(context))
                 .into(recyclerView)
         }
     }
@@ -153,11 +154,11 @@ class MainActivity : AppCompatActivity() {
                     "Note: This message is also part of the list, using a separate source with the insertBefore feature."
             Adapter.builder(this)
                 .addSource(CheeseSource(pageSize = Int.MAX_VALUE, loadingEnabled = false))
-                .addSource(TopMessageSource(message, 1))
+                .addSource(TopMessageSource(message))
                 .addSource(CheeseHeaderSource(2))
                 .addSource(CheeseFooterSource(3))
                 .addPresenter(Presenter.simple<String>(context, R.layout.item_cheese, 0, { view, data -> (view as TextView).text = data}))
-                .addPresenter(Presenter.simple<String>(context, R.layout.item_top, 1, { view, data -> (view as TextView).text = data}))
+                .addPresenter(TopMessagePresenter(context))
                 .addPresenter(Presenter.simple<HeaderSource.Data<String, String>>(context, R.layout.item_cheese_header, 2, { view, data -> (view as TextView).text = data.header}))
                 .addPresenter(Presenter.simple<FooterSource.Data<String, String>>(context, R.layout.item_cheese_footer, 3))
                 .into(recyclerView)
@@ -174,12 +175,12 @@ class MainActivity : AppCompatActivity() {
                     "Note: This message is also part of the list, using a separate source with the insertBefore feature."
             Adapter.builder(this)
                 .addSource(CheeseSource(30))
-                .addSource(TopMessageSource(message, 1))
+                .addSource(TopMessageSource(message))
                 .addSource(CheeseHeaderSource(2))
                 .addSource(CheeseFooterSource(3))
                 .addSource(PaginationSource({ it is CheeseSource }))
                 .addPresenter(Presenter.simple<String>(context, R.layout.item_cheese, 0, { view, data -> (view as TextView).text = data}))
-                .addPresenter(Presenter.simple<String>(context, R.layout.item_top, 1, { view, data -> (view as TextView).text = data}))
+                .addPresenter(TopMessagePresenter(context))
                 .addPresenter(Presenter.simple<HeaderSource.Data<String, String>>(context, R.layout.item_cheese_header, 2, { view, data -> (view as TextView).text = data.header}))
                 .addPresenter(Presenter.simple<FooterSource.Data<String, String>>(context, R.layout.item_cheese_footer, 3))
                 .addPresenter(Presenter.forLoadingIndicator(context, R.layout.item_loading))

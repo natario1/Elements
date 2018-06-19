@@ -30,19 +30,17 @@ import kotlin.reflect.KClass
  */
 abstract class Source<T: Any> {
 
-    private val map: MutableMap<Page, ResultProvider> = mutableMapOf()
-    private val keys: MutableMap<Page, Any?> = mutableMapOf()
+    private val map: MutableMap<Int, ResultProvider> = mutableMapOf()
+    private val keys: MutableMap<Int, Any?> = mutableMapOf()
     private val adapters: MutableList<Adapter> = mutableListOf()
 
-    internal fun knowsPage(page: Page) = map.containsKey(page)
+    internal fun knowsPage(page: Page) = map.containsKey(page.number)
 
-    internal fun getKnownPages() = map.keys
+    internal fun hasResultsForPage(page: Page) = knowsPage(page) && map[page.number]!!.value != null
 
-    internal fun hasResultsForPage(page: Page) = knowsPage(page) && map[page]!!.value != null
+    internal fun getResultsForPage(page: Page) = map[page.number]!!.value!!
 
-    internal fun getResultsForPage(page: Page) = map[page]!!.value!!
-
-    internal fun getCurrentResults(): Map<Page, MutableLiveData<List<Element<T>>>> = map
+    internal fun getResults(): Map<Int, MutableLiveData<List<Element<T>>>> = map
 
     /**
      * Creates an [Element] with the given data.
@@ -76,7 +74,7 @@ abstract class Source<T: Any> {
     public open fun getElementType(data: T): Int = 0
 
     private fun postResult(page: Page, result: Result<T>) {
-        map[page]!!.postValue(result)
+        map[page.number]!!.postValue(result)
     }
 
     /**
@@ -110,7 +108,7 @@ abstract class Source<T: Any> {
      * with them, replacing the old.
      */
     protected fun postResult(page: Page, liveData: LiveData<List<T>>) {
-        map[page]!!.attach(liveData)
+        map[page.number]!!.attach(liveData)
     }
 
     /**
@@ -130,7 +128,7 @@ abstract class Source<T: Any> {
      * fetched by the previous page.
      */
     protected fun setKey(page: Page, key: Any) {
-        keys[page] = key
+        keys[page.number] = key
     }
 
     /**
@@ -140,14 +138,14 @@ abstract class Source<T: Any> {
      */
     protected fun <K: Any> getKey(page: Page): K? {
         @Suppress("UNCHECKED_CAST")
-        return keys[page] as? K
+        return keys[page.number] as? K
     }
 
     internal fun openPage(page: Page, dependencies: List<Element<*>>): LiveData<List<Element<T>>> {
         if (knowsPage(page)) throw RuntimeException("Opening an already opened page!")
-        map[page] = ResultProvider(page)
+        map[page.number] = ResultProvider(page)
         onPageOpened(page, dependencies)
-        return map[page]!!
+        return map[page.number]!!
     }
 
     /**

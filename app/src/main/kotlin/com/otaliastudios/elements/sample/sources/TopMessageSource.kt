@@ -4,11 +4,11 @@ import com.otaliastudios.elements.Element
 import com.otaliastudios.elements.Page
 import com.otaliastudios.elements.Source
 
-class TopMessageSource(private val message: String, private val elementType: Int = 1) : Source<String>() {
+class TopMessageSource(private val message: String) : Source<String>() {
 
     override fun dependsOn(source: Source<*>) = true
 
-    override fun getElementType(data: String) = elementType
+    override fun getElementType(data: String) = 1
 
     override fun areItemsTheSame(first: String, second: String): Boolean {
         return first == second

@@ -11,15 +11,13 @@ A collection of modular elements for `RecyclerView` lists, alternative to
 - **Coordination**: let `Source`s declare dependencies among them, in a `CoordinatorLayout.Behavior` fashion.
 - **Paging**: built-in concept of `Page`.
 - **Integration with Arch components**: heavy use of `LiveData` and `Lifecycle`s, extensions for data binding.
+- **Animations**: give `Presenters`s fine grained control over how to animate each item
 
 ```groovy
-implementation 'com.otaliastudios:elements:0.1.2.7'
+implementation 'com.otaliastudios:elements:0.2.0'
 ```
 
 If you are curious about how it works in practice, take a look at the sample app in the `app` module.
-Missing, but planned for the future:
-
-- **Animations**: each presenter should be able to define remove and add animations based on the element type. For example, we could animate data insertions but avoid animating headers, dividers or ads.
 
 # Basics
 
@@ -67,7 +65,10 @@ The adapter is final and can't be extended. All it does is:
 - manage [`Presenter`s](#presenters): dispatch the item requests to the correct presenter
 - manage [`Page`s](#paging): if the constructor value `pageSizeHint` is specified, the adapter will automatically open a new page when the `pageSizeHint`-th element has been requested for the current page.
 - manage `Element`s: [find a presenter](#elements:-binding-presenters-and-sources), and [order them based on the source behavior](#coordination-and-ordering).
-- manage [page updates](#animations-and-diffutils): computes the difference between pages using `DiffUtil`, like the Paging library does.
+- manage [page updates](#diffutils): computes the difference between pages using `DiffUtil`, like the Paging library does.
+
+As a side feature, the adapter will install an `Animator` as default item animator for your `RecyclerView`.
+See [Animations](#animations) for more informations.
 
 ## Paging
 
@@ -231,6 +232,7 @@ public open fun insertBefore(page: Page, dependencies: List<Element<*>>, element
  
 Same goes for `insertAfter()`. Once the source has inserted all its `available` items, the methods are not called anymore.
  
+ 
 ## State restoration
 
 Sources hold strong references to pages and model data. This has a pleasant consequence:
@@ -249,7 +251,7 @@ override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 }
 ```
 
-## Animations and DiffUtils
+## DiffUtils
 
 Like the Google's Paging library, the adapter will use [`DiffUtil`](https://developer.android.com/reference/android/support/v7/util/DiffUtil)
 to compute what changed and call the appropriate `notify*` methods on the adapter.
@@ -274,6 +276,65 @@ class ContactsSource() : Source<Contact> {
     // Defaults to full equality.
     override fun areContentsTheSame(first: Contact, second: Contact): Boolean {
         return first == second
+    }
+}
+```
+
+# Animations
+
+Elements has built-in support for animations. On top of calling the correct `notify*` methods,
+we also install an `Animator` as the default item animator for your `RecyclerView`.
+
+This way each `Presenter` can have **fine-grained control** over elements animations, based on their
+type or their current data. The animations default to the standard fade animations and can be
+controlled by overriding a few methods.
+
+```kotlin
+/**
+ * Called to understand whether we should perform animations for the given animation type
+ * and for the given holder. 
+ */
+fun animates(animation: AnimationType, holder: Holder): Boolean {
+    return true
+}
+
+/**
+ * Animation will start at some point in the future. Subclasses can save info about the view
+ * state and set initial values.
+ */
+fun onPreAnimate(animation: AnimationType, holder: Holder, view: View) {
+    when (animation) {
+        AnimationType.REMOVE -> {} // Fade out: do nothing
+        AnimationType.ADD -> view.alpha = 0F // Fade in: start from 0
+    }
+}
+
+/**
+ * Animate this view using the given animator.
+ * You are not required to:
+ * - set a duration: we already use a reasonable default from RecyclerView
+ * - set interpolator: we already use a reasonable default
+ * - set a listener: it will be overriden by the library, so you should not.
+ */
+fun onAnimate(animation: AnimationType, holder: Holder, animator: ViewPropertyAnimator) {
+    when (animation) {
+        AnimationType.REMOVE -> animator.alpha(0F) // Fade out
+        AnimationType.ADD -> animator.alpha(1F) // Fade in
+    }
+}
+
+/**
+ * Restore the view state to its initial values, so the view holder can be reused.
+ * Here you should revert any changes that were done during [onPreAnimate] or [onAnimate].
+ *
+ * If the animation is canceled at some point, this will be called even if
+ * [onAnimate] was never called. So this is the good moment to restore the initial state
+ * (as opposed to animation listeners).
+ */
+fun onPostAnimate(animation: AnimationType, holder: Holder, view: View) {
+    when (animation) {
+        AnimationType.REMOVE -> view.alpha = 1F // Fade out: restore to 1
+        AnimationType.ADD -> view.alpha = 1F // Fade in: restore to 1
     }
 }
 ```

@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewPropertyAnimator
 import androidx.databinding.ViewDataBinding
 import com.otaliastudios.elements.extensions.*
 
@@ -102,11 +103,73 @@ public abstract class Presenter<T: Any>(
     }
 
     /**
+     * Called to understand whether we should perform animations for the given animation type
+     * and for the given holder. Presenters have fine grained control over what is animated and
+     * how.
+     */
+    public open fun animates(animation: AnimationType, holder: Holder): Boolean {
+        return true
+    }
+
+    /**
+     * Animation will start at some point in the future. Subclasses can save info about the view
+     * state and set initial values.
+     *
+     * Examples:
+     * - Fade in animation: you should call view.setAlpha(0) here.
+     * - Fade out animation: do nothing, we already start from full alpha.
+     */
+    public open fun onPreAnimate(animation: AnimationType, holder: Holder, view: View) {
+        when (animation) {
+            AnimationType.REMOVE -> {}
+            AnimationType.ADD -> { view.alpha = 0F }
+        }
+    }
+
+    /**
+     * Restore the view state to its initial values, so the view holder can be reused.
+     * Here you should revert any changes that were done during [onPreAnimate] or [onAnimate].
+     *
+     * If the animation is canceled at some point, this might be called even if
+     * [onAnimate] was never called. So this is the good moment to restore the initial state
+     * (as opposed to animation listeners).
+     *
+     * Examples:
+     * - Fade in animation: restore the alpha using view.setAlpha(1F)
+     * - Fade out animation: same
+     */
+    public open fun onPostAnimate(animation: AnimationType, holder: Holder, view: View) {
+        when (animation) {
+            AnimationType.REMOVE -> { view.alpha = 1F }
+            AnimationType.ADD -> { view.alpha = 1F }
+        }
+    }
+
+    /**
+     * Animate this view using the given animator.
+     * You are not required to:
+     * - set a duration: we already use a reasonable default from RecyclerView
+     * - set interpolator: we already use a reasonable default
+     * - set a listener: it will be overriden by the library, so you should not.
+     *
+     * Examples:
+     * - Fade in animation: animator.alpha(1F)
+     * - Fade out animation: animator.alpha(0F)
+     */
+    public open fun onAnimate(animation: AnimationType, holder: Holder, animator: ViewPropertyAnimator) {
+        when (animation) {
+            AnimationType.REMOVE -> { animator.alpha(0F) }
+            AnimationType.ADD -> { animator.alpha(1F) }
+        }
+    }
+
+    /**
      * A final class extending [RecyclerView.ViewHolder].
      * Holds an internal map of objects, that might be views or whatever else you need.
      * Just use [set] and [get] to retrieve them.
      */
-    class Holder(view: View): androidx.recyclerview.widget.RecyclerView.ViewHolder(view) {
+    public class Holder(view: View): RecyclerView.ViewHolder(view) {
+
         private val map: MutableMap<String, Any> = mutableMapOf()
 
         /**
@@ -121,6 +184,12 @@ public abstract class Presenter<T: Any>(
          */
         @Suppress("UNCHECKED_CAST")
         public fun <T: Any> get(key: String): T = map[key] as T
+
+        /**
+         * Shorthand for itemViewType.
+         */
+        public val elementType: Int get() = itemViewType
+
     }
 
     companion object {

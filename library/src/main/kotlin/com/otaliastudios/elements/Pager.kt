@@ -6,27 +6,31 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import android.util.Log
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Let's make this a ViewModel if possible, no contexts.
+ * TODO remove bind / unbind, now this class is View-related, dies with the Adapter.
  */
-internal class Pager(private val sources: List<Source<*>>) {
+internal class Pager {
 
     private val pages = mutableListOf<Page>()
     private var adapter: Adapter? = null
 
-    // Max pool size is ignored when using LinkedBlockingQueue. Using the 'unbounded queue' strategy:
-    // https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ThreadPoolExecutor.html
-    private val executor = ThreadPoolExecutor(5, 100,
-            30L, TimeUnit.SECONDS, LinkedBlockingQueue())
-    private val uiExecutor = Handler(Looper.getMainLooper())
+    companion object {
+        // Max pool size is ignored when using LinkedBlockingQueue. Using the 'unbounded queue' strategy:
+        // https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ThreadPoolExecutor.html
 
-    init {
-        if (sources.any { it.getKnownPages().isNotEmpty() }) {
-            throw RuntimeException("Created a pager with sources that already have pages.")
-        }
+        private val threadCount = AtomicInteger(1)
+        private val threadFactory = ThreadFactory { r -> Thread(r, "Elements Pager #" + threadCount.getAndIncrement()) }
+
+        private val executor = ThreadPoolExecutor(5, 100,
+                10L, TimeUnit.SECONDS,
+                LinkedBlockingQueue(), threadFactory)
+
+        private val uiExecutor = Handler(Looper.getMainLooper())
     }
 
     private fun countBefore(page: Page): Int {
@@ -38,11 +42,11 @@ internal class Pager(private val sources: List<Source<*>>) {
         return count
     }
 
-    internal fun requestPage() {
+    internal fun requestPage(): Page {
         val number = if (pages.isEmpty()) 0 else pages.last().number + 1
         val new = Page(this, number)
         pages.add(new)
-        adapter?.onPageCreated(new)
+        return new
     }
 
     internal fun elementCount(): Int {
@@ -70,16 +74,23 @@ internal class Pager(private val sources: List<Source<*>>) {
         throw RuntimeException("No page for position $position")
     }
 
+    internal fun pageAt(number: Int): Page {
+        return pages.first { it.number == number }
+    }
+
+    internal fun forEachPage(action: (Page) -> Unit) {
+        pages.forEach(action)
+    }
+
     /**
      * Initialize ourselves when the adapter binds to us.
      * This means creating the first page if we haven't.
      */
-    internal fun bind(adapter: Adapter) {
+    internal fun bind(adapter: Adapter, pages: Int) {
         if (this.adapter != null) throw IllegalStateException("This pager is already bound to an adapter.")
+        if (pages <= 0) throw IllegalArgumentException("Asked to create $pages pages. Should be > 0.")
         this.adapter = adapter
-        if (pages.isEmpty()) {
-            requestPage()
-        }
+        repeat(pages, { requestPage() })
     }
 
     internal fun unbind() {
@@ -107,7 +118,7 @@ internal class Pager(private val sources: List<Source<*>>) {
             val adapter = adapter ?: return@execute
             val list = page.startUpdate()
             val oldList = ArrayList(list)
-            Log.w("Pager", "Update $update started by source ${source::class.java.simpleName}, items: ${data.size}")
+            Log.i("Pager", "Update $update started by source ${source::class.java.simpleName}, items: ${data.size}")
 
             // Must split the page into elements from me, & elements from my dependencies.
             val dependencies: Set<Source<*>> = adapter.getDependencies(source)
@@ -152,16 +163,16 @@ internal class Pager(private val sources: List<Source<*>>) {
                 dataIndex++
             })
 
-            Log.w("Pager", "Update $update: OldList elements: ${oldList.joinToString(prefix = "[", postfix = "]", transform = { it.data.toString() })}")
-            Log.w("Pager", "Update $update: NewList elements: ${list.joinToString(prefix = "[", postfix = "]", transform = { it.data.toString() })}")
+            // Log.w("Pager", "Update $update: OldList elements: ${oldList.joinToString(prefix = "[", postfix = "]", transform = { it.data.toString() })}")
+            // Log.w("Pager", "Update $update: NewList elements: ${list.joinToString(prefix = "[", postfix = "]", transform = { it.data.toString() })}")
             val callback = DiffCallback(oldList, list)
             val result = DiffUtil.calculateDiff(callback, true)
             uiExecutor.post {
-                Log.e("Pager", "Update $update: Dispatched updates to adapter. 1")
+                // Log.e("Pager", "Update $update: Dispatched updates to adapter. 1")
                 page.endUpdate()
-                Log.e("Pager", "Update $update: Dispatched updates to adapter. 2")
+                // Log.e("Pager", "Update $update: Dispatched updates to adapter. 2")
                 result.dispatchUpdatesTo(DiffDispatcher(page))
-                Log.e("Pager", "Update $update: Dispatched updates to adapter. 3")
+                // Log.e("Pager", "Update $update: Dispatched updates to adapter. 3")
                 update++
             }
         }
@@ -178,7 +189,7 @@ internal class Pager(private val sources: List<Source<*>>) {
 
     internal fun notifyPageItemRangeInserted(page: Page, from: Int, count: Int) {
         val before = countBefore(page)
-        Log.i("Pager","NotifyInserted: countBefore is $before")
+        // Log.i("Pager","NotifyInserted: countBefore is $before")
         adapter?.notifyItemRangeInserted(before + from, count)
     }
 
