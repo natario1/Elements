@@ -19,7 +19,7 @@ import com.otaliastudios.elements.Presenter
  *
  * This must be used with an unbound adapter, so we can manage the page creation ourselves.
  */
-class PaginationPresenter(
+open class PaginationPresenter(
         context: Context,
         private val layout: Int
 ) : Presenter<Void>(context) {
