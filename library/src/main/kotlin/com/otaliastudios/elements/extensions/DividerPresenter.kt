@@ -14,7 +14,7 @@ import com.otaliastudios.elements.Presenter
  * A [DividerPresenter] deals with [DividerSource.ELEMENT_TYPE] elements that are
  * provided by a [DividerSource].
  */
-class DividerPresenter(
+open class DividerPresenter(
         context: Context,
         private val layout: Int
 ) : Presenter<Void>(context) {
