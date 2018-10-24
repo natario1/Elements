@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import com.otaliastudios.elements.*
 import com.otaliastudios.elements.extensions.*
+import com.otaliastudios.elements.sample.presenters.AnimatedCheesePresenter
 import com.otaliastudios.elements.sample.presenters.BottomPresenter
 import com.otaliastudios.elements.sample.presenters.TopMessagePresenter
 import com.otaliastudios.elements.sample.sources.*
@@ -22,7 +23,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.main_activity)
         val recycler = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.recycler)
         val list = listOf(R.string.menu_paged, R.string.menu_paged_on_click, R.string.menu_shuffle,
-                R.string.menu_headers, R.string.menu_empty, R.string.menu_complete)
+                R.string.menu_headers, R.string.menu_animated, R.string.menu_empty, R.string.menu_complete)
         val presenter = BottomPresenter(this, ::onElementClick)
         Adapter.builder(this)
                 .addPresenter(presenter)
@@ -41,6 +42,7 @@ class MainActivity : AppCompatActivity() {
             R.string.menu_paged_on_click -> ClickPagedFragment::class
             R.string.menu_shuffle -> ShuffleFragment::class
             R.string.menu_headers -> HeadersFragment::class
+            R.string.menu_animated -> AnimatedFragment::class
             R.string.menu_empty -> EmptyFragment::class
             R.string.menu_complete -> CompleteFragment::class
             else -> null
@@ -80,7 +82,7 @@ class MainActivity : AppCompatActivity() {
             Adapter.builder(this, 9)
                 .addSource(CheeseSource(10))
                 .addSource(TopMessageSource(message))
-                .addPresenter(Presenter.simple<String>(context, R.layout.item_cheese, 0, { view, data -> (view as TextView).text = data}))
+                .addPresenter(Presenter.simple<String>(context, R.layout.item_cheese, 0) { view, data -> (view as TextView).text = data})
                 .addPresenter(TopMessagePresenter(context))
                 .addPresenter(Presenter.forLoadingIndicator(context, R.layout.item_loading))
                 .into(recyclerView)
@@ -102,7 +104,7 @@ class MainActivity : AppCompatActivity() {
                 .addSource(CheeseSource(10))
                 .addSource(TopMessageSource(message))
                 .addSource(PaginationSource({ it is CheeseSource }))
-                .addPresenter(Presenter.simple<String>(context, R.layout.item_cheese, 0, { view, data -> (view as TextView).text = data}))
+                .addPresenter(Presenter.simple<String>(context, R.layout.item_cheese, 0) { view, data -> (view as TextView).text = data})
                 .addPresenter(TopMessagePresenter(context))
                 .addPresenter(Presenter.forLoadingIndicator(context, R.layout.item_loading))
                 .addPresenter(Presenter.forPagination(context, R.layout.item_pagination))
@@ -122,9 +124,25 @@ class MainActivity : AppCompatActivity() {
             Adapter.builder(this)
                 .addSource(ShuffleColorsShource())
                 .addSource(TopMessageSource(message))
-                .addPresenter(Presenter.simple<Int>(context, R.layout.item_color, 0, { view, data -> view.setBackgroundColor(data)}))
+                .addPresenter(Presenter.simple<Int>(context, R.layout.item_color, 0) { view, data -> view.setBackgroundColor(data)})
                 .addPresenter(TopMessagePresenter(context))
                 .into(recyclerView)
+        }
+    }
+
+    class AnimatedFragment : BaseFragment() {
+
+        override fun setUp(context: Context, recyclerView: androidx.recyclerview.widget.RecyclerView) {
+            val message = "A simple list. Each second, we add a new item. " +
+                    "The animation is chosen randomly by the presenter by simply overriding the animate methods " +
+                    "for each item.\n\n" +
+                    "Note: This message is also part of the list, using a separate source with the insertBefore feature."
+            Adapter.builder(this)
+                    .addSource(AnimatedCheeseSource())
+                    .addSource(TopMessageSource(message))
+                    .addPresenter(AnimatedCheesePresenter(context))
+                    .addPresenter(TopMessagePresenter(context))
+                    .into(recyclerView)
         }
     }
 
@@ -157,9 +175,9 @@ class MainActivity : AppCompatActivity() {
                 .addSource(TopMessageSource(message))
                 .addSource(CheeseHeaderSource(2))
                 .addSource(CheeseFooterSource(3))
-                .addPresenter(Presenter.simple<String>(context, R.layout.item_cheese, 0, { view, data -> (view as TextView).text = data}))
+                .addPresenter(Presenter.simple<String>(context, R.layout.item_cheese, 0) { view, data -> (view as TextView).text = data})
                 .addPresenter(TopMessagePresenter(context))
-                .addPresenter(Presenter.simple<HeaderSource.Data<String, String>>(context, R.layout.item_cheese_header, 2, { view, data -> (view as TextView).text = data.header}))
+                .addPresenter(Presenter.simple<HeaderSource.Data<String, String>>(context, R.layout.item_cheese_header, 2) { view, data -> (view as TextView).text = data.header})
                 .addPresenter(Presenter.simple<FooterSource.Data<String, String>>(context, R.layout.item_cheese_footer, 3))
                 .into(recyclerView)
         }
@@ -178,10 +196,10 @@ class MainActivity : AppCompatActivity() {
                 .addSource(TopMessageSource(message))
                 .addSource(CheeseHeaderSource(2))
                 .addSource(CheeseFooterSource(3))
-                .addSource(PaginationSource({ it is CheeseSource }))
-                .addPresenter(Presenter.simple<String>(context, R.layout.item_cheese, 0, { view, data -> (view as TextView).text = data}))
+                .addSource(PaginationSource { it is CheeseSource })
+                .addPresenter(Presenter.simple<String>(context, R.layout.item_cheese, 0) { view, data -> (view as TextView).text = data})
                 .addPresenter(TopMessagePresenter(context))
-                .addPresenter(Presenter.simple<HeaderSource.Data<String, String>>(context, R.layout.item_cheese_header, 2, { view, data -> (view as TextView).text = data.header}))
+                .addPresenter(Presenter.simple<HeaderSource.Data<String, String>>(context, R.layout.item_cheese_header, 2) { view, data -> (view as TextView).text = data.header})
                 .addPresenter(Presenter.simple<FooterSource.Data<String, String>>(context, R.layout.item_cheese_footer, 3))
                 .addPresenter(Presenter.forLoadingIndicator(context, R.layout.item_loading))
                 .addPresenter(Presenter.forPagination(context, R.layout.item_pagination))

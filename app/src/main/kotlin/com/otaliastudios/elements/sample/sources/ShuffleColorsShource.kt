@@ -9,7 +9,7 @@ import com.otaliastudios.elements.Source
 class ShuffleColorsShource(private val delayMillis: Long = 3000) : Source<Int>() {
 
     private val handler = Handler()
-    private var colors = Array(8, { randomColor() }).toList()
+    private var colors = Array(8) { randomColor() }.toList()
 
     private fun randomColor() = Color.argb(255,
             180 + (Math.random() * 70).toInt(),

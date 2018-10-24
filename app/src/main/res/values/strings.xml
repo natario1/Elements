@@ -5,6 +5,7 @@
     <string name="menu_paged_on_click">Click-paged</string>
     <string name="menu_shuffle">Shuffle</string>
     <string name="menu_headers">Headers</string>
+    <string name="menu_animated">Animated</string>
     <string name="menu_empty">Empty</string>
     <string name="menu_complete">Complete</string>
 </resources>

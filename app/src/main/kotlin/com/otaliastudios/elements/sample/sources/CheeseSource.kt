@@ -7,7 +7,11 @@ import com.otaliastudios.elements.Source
 import com.otaliastudios.elements.extensions.MainSource
 import com.otaliastudios.elements.sample.Cheese
 
-open class CheeseSource(private val pageSize: Int = 10, loadingEnabled: Boolean = true) : MainSource<String>(loadingEnabled) {
+open class CheeseSource(
+        private val pageSize: Int = 10,
+        loadingEnabled: Boolean = true,
+        emptyEnabled: Boolean = true
+) : MainSource<String>(loadingIndicatorsEnabled = loadingEnabled, emptyIndicatorEnabled = emptyEnabled) {
 
     protected val handler = Handler()
 
