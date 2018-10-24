@@ -19,19 +19,6 @@ open class AnimatedCheeseSource : Source<String>() {
 
     override fun onPageOpened(page: Page, dependencies: List<Element<*>>) {
         super.onPageOpened(page, dependencies)
-        /* val list = Cheese.LIST
-        val result = if (page.isFirstPage()) {
-            split(list, 0)
-        } else {
-            val key = getKey<String>(page.previous()!!)
-            split(list, list.indexOf(key) + 1)
-        }
-        setKey(page, result.last())
-        postResult(page, result)
-
-        handler.postDelayed({
-            requestPage(page)
-        }, 1000) */
 
         if (page.isFirstPage()) {
             val all = Cheese.LIST
