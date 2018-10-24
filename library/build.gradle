@@ -46,6 +46,7 @@ dependencies {
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
     api "androidx.recyclerview:recyclerview:$recyclerVersion"
     api "androidx.lifecycle:lifecycle-livedata:$lifecycleVersion"
+    api "com.jakewharton.timber:timber:$timberVersion"
 }
 
 task sourcesJar(type: Jar) {

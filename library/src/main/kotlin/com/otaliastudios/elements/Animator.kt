@@ -110,13 +110,18 @@ public class Animator(private val adapter: Adapter) : SimpleItemAnimator() {
      * to understand whether the item should be animated out or not.
      */
     override fun animateRemove(holder: RecyclerView.ViewHolder): Boolean {
+        ElementsLogger.v("Animator animateRemove called for ${holder.hashCode()}")
         holder as Presenter.Holder
         resetAnimation(holder)
         return if (holder.animates(AnimationType.REMOVE)) {
+            resetAnimation(holder)
             holder.onPreAnimate(AnimationType.REMOVE)
             pendingRemovals.add(holder)
             true
-        } else false
+        } else {
+            dispatchRemoveFinished(holder)
+            false
+        }
     }
 
     /**
@@ -124,13 +129,17 @@ public class Animator(private val adapter: Adapter) : SimpleItemAnimator() {
      * to understand whether the item should be animated in or not.
      */
     override fun animateAdd(holder: RecyclerView.ViewHolder): Boolean {
+        ElementsLogger.v("Animator animateAdd called for ${holder.hashCode()}")
         holder as Presenter.Holder
         resetAnimation(holder)
         return if (holder.animates(AnimationType.ADD)) {
             holder.onPreAnimate(AnimationType.ADD)
             pendingAdditions.add(holder)
             true
-        } else false
+        } else {
+            dispatchAddFinished(holder)
+            false
+        }
     }
 
     /**
@@ -139,6 +148,7 @@ public class Animator(private val adapter: Adapter) : SimpleItemAnimator() {
     @Suppress("NAME_SHADOWING")
     override fun animateMove(holder: RecyclerView.ViewHolder, fromX: Int, fromY: Int,
                              toX: Int, toY: Int): Boolean {
+        ElementsLogger.v("Animator animateMove called for ${holder.hashCode()}")
         holder as Presenter.Holder
         val view = holder.itemView
         val fromX = fromX + view.translationX.toInt()
@@ -147,8 +157,11 @@ public class Animator(private val adapter: Adapter) : SimpleItemAnimator() {
         val deltaX = toX - fromX
         val deltaY = toY - fromY
         if (deltaX == 0 && deltaY == 0) {
+            ElementsLogger.w("Animator animateMove: finished because delta is 0.")
             dispatchMoveFinished(holder)
             return false
+        } else {
+            ElementsLogger.v("Animator animateMove: adding move to pendingMoves. deltaX $deltaX deltaY $deltaY.")
         }
         if (deltaX != 0) view.translationX = (-deltaX).toFloat()
         if (deltaY != 0) view.translationY = (-deltaY).toFloat()
@@ -161,12 +174,16 @@ public class Animator(private val adapter: Adapter) : SimpleItemAnimator() {
      */
     override fun animateChange(oldHolder0: RecyclerView.ViewHolder, newHolder0: RecyclerView.ViewHolder?,
                                fromX: Int, fromY: Int, toX: Int, toY: Int): Boolean {
+        ElementsLogger.v("Animator animateChange called for ${oldHolder0.hashCode()} and ${newHolder0?.hashCode()}")
         val oldHolder = oldHolder0 as Presenter.Holder
         val newHolder = newHolder0 as? Presenter.Holder
         if (oldHolder === newHolder) {
             // Don't know how to run change animations when the same view holder is re-used.
             // run a move animation to handle position changes.
+            ElementsLogger.v("Animator animateChange: Same holders. xRange $fromX $toX yRange $fromY $toY")
             return animateMove(oldHolder, fromX, fromY, toX, toY)
+        } else {
+            ElementsLogger.v("Animator animateChange: Different holders. xRange $fromX $toX yRange $fromY $toY")
         }
         val prevTranslationX = oldHolder.itemView.translationX
         val prevTranslationY = oldHolder.itemView.translationY
@@ -207,17 +224,20 @@ public class Animator(private val adapter: Adapter) : SimpleItemAnimator() {
 
         // First, execute remove animations.
         for (holder in pendingRemovals) {
+            ElementsLogger.v("Animator runPendingAnimations: executing removals.")
             executeRemoval(holder)
         }
         pendingRemovals.clear()
 
         // Next, execute move and change animations at the same time.
         if (hasMoves) {
+            ElementsLogger.v("Animator runPendingAnimations: scheduling moves.")
             val moves = mutableListOf<MoveInfo>()
             moves.addAll(pendingMoves)
             scheduledMoves.add(moves)
             pendingMoves.clear()
             val mover = Runnable {
+                ElementsLogger.v("Animator runPendingAnimations: executing moves.")
                 moves.forEach { executeMove(it) }
                 moves.clear()
                 scheduledMoves.remove(moves)
@@ -230,11 +250,13 @@ public class Animator(private val adapter: Adapter) : SimpleItemAnimator() {
             }
         }
         if (hasChanges) {
+            ElementsLogger.v("Animator runPendingAnimations: scheduling changes.")
             val changes = mutableListOf<ChangeInfo>()
             changes.addAll(pendingChanges)
             scheduledChanges.add(changes)
             pendingChanges.clear()
             val changer = Runnable {
+                ElementsLogger.v("Animator runPendingAnimations: executing changes. delayed: ${hasRemovals}")
                 changes.forEach { executeChange(it) }
                 changes.clear()
                 scheduledChanges.remove(changes)
@@ -249,11 +271,13 @@ public class Animator(private val adapter: Adapter) : SimpleItemAnimator() {
 
         // Next, execute additions after everything else has finished.
         if (hasAdditions) {
+            ElementsLogger.v("Animator runPendingAnimations: scheduling additions.")
             val additions = mutableListOf<Presenter.Holder>()
             additions.addAll(pendingAdditions)
             scheduledAdditions.add(additions)
             pendingAdditions.clear()
             val adder = Runnable {
+                ElementsLogger.v("Animator runPendingAnimations: executing additions.")
                 additions.forEach { executeAddition(it) }
                 additions.clear()
                 scheduledAdditions.remove(additions)
@@ -357,10 +381,12 @@ public class Animator(private val adapter: Adapter) : SimpleItemAnimator() {
             oldViewAnim.translationY((changeInfo.toY - changeInfo.fromY).toFloat())
             oldViewAnim.alpha(0f).setListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationStart(animator: Animator) {
+                    ElementsLogger.v("Animator executeChange: oldHolder: onAnimationStart")
                     dispatchChangeStarting(oldHolder, true)
                 }
 
                 override fun onAnimationEnd(animator: Animator) {
+                    ElementsLogger.v("Animator executeChange: oldHolder: onAnimationEnd")
                     oldViewAnim.setListener(null)
                     oldView.alpha = 1f
                     oldView.translationX = 0f
@@ -368,6 +394,11 @@ public class Animator(private val adapter: Adapter) : SimpleItemAnimator() {
                     dispatchChangeFinished(oldHolder, true)
                     runningChanges.remove(oldHolder)
                     maybeDispatchFinished()
+                }
+
+                override fun onAnimationCancel(animation: Animator?) {
+                    super.onAnimationCancel(animation)
+                    ElementsLogger.v("Animator executeChange: oldHolder: onAnimationCancel")
                 }
             }).start()
         }
@@ -378,10 +409,12 @@ public class Animator(private val adapter: Adapter) : SimpleItemAnimator() {
             newViewAnimation.translationX(0f).translationY(0f).setDuration(changeDuration)
                     .alpha(1f).setListener(object : AnimatorListenerAdapter() {
                         override fun onAnimationStart(animator: Animator) {
+                            ElementsLogger.v("Animator executeChange: newHolder: onAnimationStart")
                             dispatchChangeStarting(newHolder, false)
                         }
 
                         override fun onAnimationEnd(animator: Animator) {
+                            ElementsLogger.v("Animator executeChange: newHolder: onAnimationEnd")
                             newViewAnimation.setListener(null)
                             newView.alpha = 1f
                             newView.translationX = 0f
@@ -389,6 +422,11 @@ public class Animator(private val adapter: Adapter) : SimpleItemAnimator() {
                             dispatchChangeFinished(newHolder, false)
                             runningChanges.remove(newHolder)
                             maybeDispatchFinished()
+                        }
+
+                        override fun onAnimationCancel(animation: Animator?) {
+                            super.onAnimationCancel(animation)
+                            ElementsLogger.v("Animator executeChange: newHolder: onAnimationCancel")
                         }
                     }).start()
         }

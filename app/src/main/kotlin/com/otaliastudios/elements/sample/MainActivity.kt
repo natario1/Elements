@@ -13,17 +13,24 @@ import com.otaliastudios.elements.*
 import com.otaliastudios.elements.extensions.*
 import com.otaliastudios.elements.sample.presenters.AnimatedCheesePresenter
 import com.otaliastudios.elements.sample.presenters.BottomPresenter
+import com.otaliastudios.elements.sample.presenters.PlaygroundPresenter
 import com.otaliastudios.elements.sample.presenters.TopMessagePresenter
 import com.otaliastudios.elements.sample.sources.*
+import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
+        ElementsLogger.setLevel(ElementsLogger.VERBOSE)
+        Timber.plant(Timber.DebugTree())
         val recycler = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.recycler)
-        val list = listOf(R.string.menu_paged, R.string.menu_paged_on_click, R.string.menu_shuffle,
-                R.string.menu_headers, R.string.menu_animated, R.string.menu_empty, R.string.menu_complete)
+        val list = listOf(
+                R.string.menu_paged, R.string.menu_paged_on_click,
+                R.string.menu_shuffle, R.string.menu_headers,
+                R.string.menu_animated, R.string.menu_empty,
+                R.string.menu_complete, R.string.menu_playground)
         val presenter = BottomPresenter(this, ::onElementClick)
         Adapter.builder(this)
                 .addPresenter(presenter)
@@ -45,6 +52,7 @@ class MainActivity : AppCompatActivity() {
             R.string.menu_animated -> AnimatedFragment::class
             R.string.menu_empty -> EmptyFragment::class
             R.string.menu_complete -> CompleteFragment::class
+            R.string.menu_playground -> PlaygroundFragment::class
             else -> null
         }
         if (klass != null) {
@@ -204,6 +212,20 @@ class MainActivity : AppCompatActivity() {
                 .addPresenter(Presenter.forLoadingIndicator(context, R.layout.item_loading))
                 .addPresenter(Presenter.forPagination(context, R.layout.item_pagination))
                 .into(recyclerView)
+        }
+    }
+
+
+    class PlaygroundFragment : BaseFragment() {
+
+        override fun setUp(context: Context, recyclerView: androidx.recyclerview.widget.RecyclerView) {
+            val message = "Just experimenting here to reproduce bugs. This is not a feature of the library at all."
+            Adapter.builder(this)
+                    .addSource(TopMessageSource(message))
+                    .addPresenter(TopMessagePresenter(context))
+                    .addSource(PlaygroundSource())
+                    .addPresenter(PlaygroundPresenter(context))
+                    .into(recyclerView)
         }
     }
 

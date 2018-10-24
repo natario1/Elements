@@ -35,6 +35,7 @@ ext {
     appcompatVersion = '1.0.0'
     recyclerVersion = '1.0.0'
     lifecycleVersion = '2.0.0'
+    timberVersion = '4.7.1'
 }
 
 task clean(type: Delete) {

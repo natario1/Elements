@@ -8,4 +8,5 @@
     <string name="menu_animated">Animated</string>
     <string name="menu_empty">Empty</string>
     <string name="menu_complete">Complete</string>
+    <string name="menu_playground">Playground</string>
 </resources>
