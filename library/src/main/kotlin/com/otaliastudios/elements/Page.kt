@@ -3,10 +3,7 @@ package com.otaliastudios.elements
 import androidx.annotation.UiThread
 import java.util.*
 import java.util.concurrent.Semaphore
-import java.util.concurrent.locks.Lock
-import java.util.concurrent.locks.ReentrantLock
 import kotlin.collections.ArrayList
-import kotlin.concurrent.withLock
 
 /**
  * A [Page] represents and holds element data for a single page.
@@ -15,7 +12,7 @@ import kotlin.concurrent.withLock
  *
  * It uses a [Semaphore] and two different lists to manage and lock updates.
  */
-public class Page internal constructor(internal val pager: Pager, internal val number: Int) {
+public class Page internal constructor(internal val pageManager: PageManager, internal val number: Int) {
 
     private val semaphore = Semaphore(1, true)
     private var elements = arrayListOf<Element<*>>()
@@ -38,13 +35,13 @@ public class Page internal constructor(internal val pager: Pager, internal val n
      * Returns the previous [Page], if there is one,
      * or null if there isn't.
      */
-    public fun previous(): Page? = pager.previous(this)
+    public fun previous(): Page? = pageManager.previous(this)
 
     /**
      * Returns the next [Page], if there is one,
      * or null if there isn't.
      */
-    public fun next(): Page? = pager.next(this)
+    public fun next(): Page? = pageManager.next(this)
 
     /**
      * Returns true if this is the first page,
@@ -93,7 +90,7 @@ public class Page internal constructor(internal val pager: Pager, internal val n
         val count = list.size
         list.clear()
         endUpdate()
-        pager.notifyPageItemRangeRemoved(this, 0, count)
+        pageManager.notifyPageItemRangeRemoved(this, 0, count)
     }
 
     /**
@@ -107,7 +104,7 @@ public class Page internal constructor(internal val pager: Pager, internal val n
         if (position >= 0 && position <= list.size) {
             list.add(position, element)
             endUpdate()
-            pager.notifyPageItemInserted(this, position)
+            pageManager.notifyPageItemInserted(this, position)
         } else {
             endUpdate()
         }
@@ -124,7 +121,7 @@ public class Page internal constructor(internal val pager: Pager, internal val n
         if (position >= 0 && position < list.size) {
             list.removeAt(position)
             endUpdate()
-            pager.notifyPageItemRemoved(this, position)
+            pageManager.notifyPageItemRemoved(this, position)
         } else {
             endUpdate()
         }
@@ -142,7 +139,7 @@ public class Page internal constructor(internal val pager: Pager, internal val n
         if (index >= 0) {
             list.removeAt(index)
             endUpdate()
-            pager.notifyPageItemRemoved(this, index)
+            pageManager.notifyPageItemRemoved(this, index)
         } else {
             endUpdate()
         }
@@ -160,7 +157,7 @@ public class Page internal constructor(internal val pager: Pager, internal val n
         if (position >= 0) {
             list[position] = withItem
             endUpdate()
-            pager.notifyPageItemChanged(this, position)
+            pageManager.notifyPageItemChanged(this, position)
         } else {
             endUpdate()
         }
@@ -178,7 +175,7 @@ public class Page internal constructor(internal val pager: Pager, internal val n
         if (position >= 0 && position <= list.size && elements.isNotEmpty()) {
             list.addAll(position, elements)
             endUpdate()
-            pager.notifyPageItemRangeInserted(this, position, elements.size)
+            pageManager.notifyPageItemRangeInserted(this, position, elements.size)
         } else {
             endUpdate()
         }
@@ -199,7 +196,7 @@ public class Page internal constructor(internal val pager: Pager, internal val n
                 offset += 1
             }
             endUpdate()
-            pager.notifyPageItemRangeChanged(this, position, elements.size)
+            pageManager.notifyPageItemRangeChanged(this, position, elements.size)
         }
          else {
             endUpdate()
@@ -221,7 +218,7 @@ public class Page internal constructor(internal val pager: Pager, internal val n
                 item += 1
             }
             endUpdate()
-            pager.notifyPageItemRangeRemoved(this, position, count)
+            pageManager.notifyPageItemRangeRemoved(this, position, count)
         } else {
             endUpdate()
         }
@@ -237,7 +234,7 @@ public class Page internal constructor(internal val pager: Pager, internal val n
         val list = startUpdate()
         if (position >= 0 && position < list.size) {
             endUpdate()
-            pager.notifyPageItemChanged(this, position)
+            pageManager.notifyPageItemChanged(this, position)
         } else {
             endUpdate()
         }
@@ -254,7 +251,7 @@ public class Page internal constructor(internal val pager: Pager, internal val n
         val index = list.indexOf(element)
         if (index >= 0) {
             endUpdate()
-            pager.notifyPageItemChanged(this, index)
+            pageManager.notifyPageItemChanged(this, index)
         } else {
             endUpdate()
         }

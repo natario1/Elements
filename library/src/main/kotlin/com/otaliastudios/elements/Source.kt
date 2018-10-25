@@ -31,7 +31,7 @@ import kotlin.reflect.KClass
 abstract class Source<T: Any> {
 
     private val map: MutableMap<Int, ResultProvider> = mutableMapOf()
-    private val keys: MutableMap<Int, Any?> = mutableMapOf()
+    private val keys: MutableMap<Int, MutableLiveData<Any>> = mutableMapOf()
     private val adapters: MutableList<Adapter> = mutableListOf()
 
     internal fun knowsPage(page: Page) = map.containsKey(page.number)
@@ -128,7 +128,11 @@ abstract class Source<T: Any> {
      * fetched by the previous page.
      */
     protected fun setKey(page: Page, key: Any) {
-        keys[page.number] = key
+        if (!keys.containsKey(page.number)) {
+            keys[page.number] = MutableLiveData()
+        }
+        val liveData = keys[page.number]!!
+        liveData.value = key
     }
 
     /**
@@ -137,8 +141,25 @@ abstract class Source<T: Any> {
      * a query.
      */
     protected fun <K: Any> getKey(page: Page): K? {
+        return getKeyLiveData<K>(page).value
+    }
+
+    /**
+     * Like [getKey], but returns a [LiveData] object that
+     * is triggered anytime the given page updates its key.
+     *
+     * Can be used by subsequent pages to update their results based
+     * on the updated results of the previous page.
+     *
+     * You should use a [MediatorLiveData] and wrap this with attention, so that
+     * it is observed only while that specific page is alive.
+     */
+    protected fun <K: Any> getKeyLiveData(page: Page): LiveData<K> {
+        if (!keys.containsKey(page.number)) {
+            keys[page.number] = MutableLiveData()
+        }
         @Suppress("UNCHECKED_CAST")
-        return keys[page.number] as? K
+        return keys[page.number] as LiveData<K>
     }
 
     internal fun openPage(page: Page, dependencies: List<Element<*>>): LiveData<List<Element<T>>> {
@@ -246,12 +267,12 @@ abstract class Source<T: Any> {
         fun attach(source: LiveData<List<T>>) {
             if (attachedSource != null) removeSource(attachedSource!!)
             attachedSource = source
-            addSource(attachedSource!!, {
+            addSource(attachedSource!!) {
                 if (it != null) {
                     val elements = createElements(it)
                     postValue(Result(elements))
                 }
-            })
+            }
         }
     }
 

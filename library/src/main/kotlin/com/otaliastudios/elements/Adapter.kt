@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
 import android.util.SparseArray
 import android.view.ViewGroup
+import com.otaliastudios.elements.pagers.PageSizePager
 
 /**
  * Base class. Use [Builder] to create an instance with the
@@ -14,7 +15,7 @@ public final class Adapter private constructor(
         private val lifecycleOwner: LifecycleOwner,
         private val sources: MutableList<Source<*>>,
         private val presenters: List<Presenter<*>>,
-        private val pageSizeHint: Int
+        private val pager: Pager
 ) : RecyclerView.Adapter<Presenter.Holder>(), LifecycleOwner, LifecycleObserver {
 
     /**
@@ -25,6 +26,16 @@ public final class Adapter private constructor(
     public class Builder(private val lifecycleOwner: LifecycleOwner, private val pageSizeHint: Int = Int.MAX_VALUE) {
         private val sources = mutableListOf<Source<*>>()
         private val presenters = mutableListOf<Presenter<*>>()
+        private var pager: Pager? = null
+
+        /**
+         * Sets the pager for this adapter,
+         * replacing any previous value.
+         */
+        public fun setPager(pager: Pager): Builder {
+            this.pager = pager
+            return this
+        }
 
         /**
          * Append a [Source] for this adapter.
@@ -48,7 +59,12 @@ public final class Adapter private constructor(
          * Builds the adapter with the given options.
          * Use [into] to inject directly into a recycler.
          */
-        public fun build() = Adapter(lifecycleOwner, sources, presenters, pageSizeHint)
+        public fun build(): Adapter {
+            if (pager == null) {
+                pager = PageSizePager(pageSizeHint)
+            }
+            return Adapter(lifecycleOwner, sources, presenters, pager!!)
+        }
 
         /**
          * Builds the adapter and injects it into
@@ -152,9 +168,11 @@ public final class Adapter private constructor(
     }
 
     // Must be done after the init() so it gets sorted sources.
-    private val pager: Pager
+    private val pageManager: PageManager
 
     init {
+        pager.adapter = this
+
         // First, let's bind to these sources, this is harmless.
         sources.forEach { it.bind(this) }
 
@@ -169,14 +187,14 @@ public final class Adapter private constructor(
         val restoredCount = pages.size
         val pageCount = maxOf(restoredCount, 1) // Most frequently, this will be 0.
 
-        // Third, create a pager.
-        // The pager will create pageCount pages.
-        pager = Pager()
-        pager.bind(this, pageCount)
+        // Third, create a pageManager.
+        // The pageManager will create pageCount pages.
+        pageManager = PageManager()
+        pageManager.bind(this, pageCount)
 
         // This branch is useless but helps understand what's going on.
         if (restoredCount == 0) {
-            onPageCreated(pager.pageAt(0))
+            onPageCreated(pageManager.pageAt(0))
         } else {
 
             // There is one issue. Let's say we recovered X pages from source A,
@@ -192,14 +210,14 @@ public final class Adapter private constructor(
             sources.forEach { source ->
                 source.getResults().forEach { entry ->
                     // This source knows this page.
-                    val page = pager.pageAt(entry.key)
+                    val page = pageManager.pageAt(entry.key)
                     onSourceLiveData(page, source, entry.value)
                 }
             }
 
             // Solve 3:
             // Must be done after 1 - 2, or it will create results for B C D that depends on A.
-            pager.forEachPage { onPageCreated(it) }
+            pageManager.forEachPage { onPageCreated(it) }
 
             // This solution will mess with the order a bit (if B1 depends on A, and B2 does not,
             // B1 will probably receive openPage() before B2 which makes no sense but should do no harm).
@@ -209,7 +227,7 @@ public final class Adapter private constructor(
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     private fun onDestroy() {
-        pager.unbind()
+        pageManager.unbind()
         sources.forEach {
             it.unbind(this)
         }
@@ -231,7 +249,7 @@ public final class Adapter private constructor(
      * 2. Notify sources depending on this source
      */
     private fun onSourceResults(page: Page, source: Source<*>, result: List<Element<*>>) {
-        pager.setResults(page, source, result)
+        pageManager.setResults(page, source, result)
         // These are the sources that might be interested in this.
         val dependents = getReverseDependencies(source)
         for (dependent in dependents) {
@@ -266,14 +284,14 @@ public final class Adapter private constructor(
      * Returns the current item count, not considering any
      * transaction that is being computed.
      */
-    override fun getItemCount() = pager.elementCount()
+    override fun getItemCount() = pageManager.elementCount()
 
     /**
      * Returns the element type for the given position,
      * by querying the element for that position.
      */
     override fun getItemViewType(position: Int): Int {
-        return pager.elementAt(position).element!!.type
+        return pageManager.elementAt(position).element!!.type
     }
 
     internal fun presenterForType(viewType: Int): Presenter<*> {
@@ -305,7 +323,7 @@ public final class Adapter private constructor(
     @Suppress("UNCHECKED_CAST")
     override fun onBindViewHolder(holder: Presenter.Holder, position: Int) {
         val presenter = typeMap.get(holder.itemViewType) as Presenter<Any>
-        val query = pager.elementAt(position)
+        val query = pageManager.elementAt(position)
         val page = query.page!!
         val element = query.element as Element<Any>
         Log.i("Adapter", "onBindViewHolder, type: ${holder.itemViewType}, " +
@@ -318,11 +336,7 @@ public final class Adapter private constructor(
             throw RuntimeException("Something is wrong here...")
         }
         presenter.onBind(page, holder, element)
-
-        if (query.positionInPage == pageSizeHint - 1 && page.isLastPage()) {
-            val page = pager.requestPage()
-            onPageCreated(page)
-        }
+        pager.onElementBound(page, element, presenter, position, query.positionInPage)
     }
 
     /**
@@ -331,7 +345,7 @@ public final class Adapter private constructor(
      * in order to disable automatic page opening.
      */
     public fun openPage() {
-        val page = pager.requestPage()
+        val page = pageManager.requestPage()
         onPageCreated(page)
     }
 

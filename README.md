@@ -14,7 +14,7 @@ A collection of modular elements for `RecyclerView` lists, alternative to
 - **Animations**: give `Presenters`s fine grained control over how to animate each item
 
 ```groovy
-implementation 'com.otaliastudios:elements:0.2.1'
+implementation 'com.otaliastudios:elements:0.2.4'
 ```
 
 If you are curious about how it works in practice, take a look at the sample app in the `app` module.
@@ -75,8 +75,13 @@ See [Animations](#animations) for more informations.
 The key concept is that each `Source` is independent in the number of elements that it wants to lay down
 for a given page.
 
-Whether a new page will be opened, this depends on the `pageSizeHint` parameter in the `Adapter`.
-Let's say we have a `Source` called `ContactsSource` that can display X items per page. 
+Whether a new page will be opened, this depends on the `Pager` that is bound to the `Adapter`.
+A pager receives updates about elements that are about to be laid out, and can determine whether it's time
+to load a new page or not.
+
+We offer a base implementation called `PageSizePager` which will request new pages when the X-th 
+element is loaded. Let's show this by examples  - let's say we have a `Source` called `ContactsSource` 
+that can display X items per page. 
 
 ```kotlin
 // Single page with all elements.
@@ -88,16 +93,20 @@ Adapter.builder(lifecycle)
 ```kotlin    
 // Good: Split into pages of 10 contacts. When the 10-th element is requested,
 // the adapter will request the source for a new page of elements.
-Adapter.builder(lifecycle, 10)
+Adapter.builder(lifecycle)
+    .setPager(PageSizePager(10))
     .addSource(ContactsSource(itemsPerPage = 10))
     .into(recyclerView)
 ```
+
+Note: as a shorthand, instead of `setPager(PageSizePager(10))`, you can simply pass `10` to the builder constructor.
 
 ```kotlin    
 // Better: Split into pages of 10 contacts, but request the next page when the 7-th
 // is shown. This means that our network request will be fired earlier and the user will
 // wait less time when scrolling.
-Adapter.builder(lifecycle, 7)
+Adapter.builder(lifecycle)
+    .setPager(PageSizePager(7))
     .addSource(ContactsSource(itemsPerPage = 10))
     .into(recyclerView)
 ```
@@ -114,7 +123,8 @@ Adapter.builder(lifecycle)
 ```kotlin
 // Error: the source loads everything, but when the 10-th element is requested,
 // the adapter tries to open another page. No big deal anyway.
-Adapter.builder(lifecycle, 10)
+Adapter.builder(lifecycle)
+    .setPager(PageSizePager(10))
     .addSource(ContactsSource(itemsPerPage = Int.MAX_VALUE))
     .into(recyclerView)
 ```
