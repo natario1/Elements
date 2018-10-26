@@ -9,7 +9,7 @@ apply plugin: 'com.jfrog.bintray'
 // Working: https://github.com/Faltenreich/TextInputView/blob/develop/textinputview/deploy.gradle
 
 ext {
-    libVersion = '0.2.6'
+    libVersion = '0.2.7'
     libGroup = 'com.otaliastudios'
     libName = 'Elements'
     libDescription = 'A modular approach to RecyclerView adapters with reusable, testable, independent, coordinated components.'

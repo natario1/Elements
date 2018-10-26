@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
 import android.util.SparseArray
 import android.view.ViewGroup
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.otaliastudios.elements.pagers.PageSizePager
 
 /**
@@ -181,9 +182,12 @@ public final class Adapter private constructor(
         sources.forEach { pages.addAll(it.getResults().keys) }
 
         // Just to be sure, ensure that we have no gaps.
-        pages.toList().sorted().forEachIndexed { index, page ->
+        pages.asSequence().sorted().forEachIndexed { index, page ->
             if (index != page) throw IllegalStateException("Inconsistency in Source pages.")
         }
+        /* pages.toList().sorted().forEachIndexed { index, page ->
+            if (index != page) throw IllegalStateException("Inconsistency in Source pages.")
+        } */
         val restoredCount = pages.size
         val pageCount = maxOf(restoredCount, 1) // Most frequently, this will be 0.
 
@@ -197,13 +201,13 @@ public final class Adapter private constructor(
             onPageCreated(pageManager.pageAt(0))
         } else {
 
-            // There is one issue. Let's say we recovered X pages from source A,
+            // Complications at this point: Let's say we recovered X pages from source A,
             // and we have sources B, C, D who don't know about these X pages.
-            // 1. We are not subscribed to A LiveData about these X pages.
-            // 2. If (B, C, D) do depend on A: they won't receive openPage(), they are waiting for A results.
-            // 3. If (B, C, D) do not depend on A: they will receive openPage(). All is fine here.
+            // ISSUE 1: We are not subscribed to A LiveData about these existing X pages.
+            // ISSUE 2. If (B, C, D) do depend on A: they won't receive openPage(), they are waiting for A results.
+            // ISSUE 3. If (B, C, D) do not depend on A: they must receive openPage().
 
-            // Solve 1 - 2:
+            // Solves 1 - 2:
             // We should subscribe to As through their results.
             // Since the results are cached by LiveData, this will finally trigger
             // openPage() on B, C, D.
@@ -211,13 +215,13 @@ public final class Adapter private constructor(
                 source.getResults().forEach { entry ->
                     // This source knows this page.
                     val page = pageManager.pageAt(entry.key)
-                    onSourceLiveData(page, source, entry.value)
+                    onSourceLiveData(page, source, entry.value, true)
                 }
             }
 
-            // Solve 3:
+            // Solves 3:
             // Must be done after 1 - 2, or it will create results for B C D that depends on A.
-            pageManager.forEachPage { onPageCreated(it) }
+            pageManager.forEach { onPageCreated(it) }
 
             // This solution will mess with the order a bit (if B1 depends on A, and B2 does not,
             // B1 will probably receive openPage() before B2 which makes no sense but should do no harm).
@@ -239,7 +243,7 @@ public final class Adapter private constructor(
     private fun onPageCreated(page: Page) {
         sources.filter { !hasDependencies(it) && !it.knowsPage(page) }.forEach { source ->
             val data = source.openPage(page, listOf())
-            onSourceLiveData(page, source, data)
+            onSourceLiveData(page, source, data, false)
         }
     }
 
@@ -248,8 +252,8 @@ public final class Adapter private constructor(
      * 1. Update the Recycler
      * 2. Notify sources depending on this source
      */
-    private fun onSourceResults(page: Page, source: Source<*>, result: List<Element<*>>) {
-        pageManager.setResults(page, source, result)
+    private fun onSourceResults(page: Page, source: Source<*>, result: List<Element<*>>, sync: Boolean) {
+        pageManager.setResults(page, source, result, sync)
         // These are the sources that might be interested in this.
         val dependents = getReverseDependencies(source)
         for (dependent in dependents) {
@@ -261,22 +265,39 @@ public final class Adapter private constructor(
                     dependent.onPageChanged(page, list)
                 } else {
                     val data = dependent.openPage(page, list)
-                    onSourceLiveData(page, dependent, data)
+                    onSourceLiveData(page, dependent, data, false)
                 }
             }
         }
     }
 
     /**
-     * This source provided us with a new LiveData object. Let's subscribe
+     * This source provided us with a new [LiveData] object. Let's subscribe
      * to stay updated. This might happen after an openPage, or after rebinding to
      * sources that have values already.
+     *
+     * @param fromSavedState: If coming from a saved state (which means:
+     * this source already knew about this page before this Adapter was created. This is the case
+     * of a Source held in a ViewModel and the adapter is recreated with the view).
+     *
+     * In this case, we might want to perform a synchronous put (instead of async as usual),
+     * because, the whole [RecyclerView] restoration relies on the fact that, at first layout,
+     * it finds the data it had before.
+     *
+     * See, for instance, [LinearLayoutManager] callbacks about state saving and restoration.
+     * During restoration, it asks for a new layout, but during layout, if it has no data,
+     * it discards the saved state.
      */
-    private fun onSourceLiveData(page: Page, source: Source<*>, data: LiveData<out List<Element<*>>>) {
+    private fun onSourceLiveData(page: Page, source: Source<*>, data: LiveData<out List<Element<*>>>, fromSavedState: Boolean) {
         @Suppress("UNCHECKED_CAST")
         val cast = data as LiveData<List<Element<*>>>
+        var firstTime = true
         cast.observe(this, Observer {
-            if (it != null) onSourceResults(page, source, it)
+            if (it != null) {
+                val sync = fromSavedState && firstTime
+                onSourceResults(page, source, it, sync)
+                firstTime = false
+            }
         })
     }
 

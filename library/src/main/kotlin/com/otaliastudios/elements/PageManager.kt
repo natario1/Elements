@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * TODO remove bind / unbind, now this class is View-related, dies with the Adapter.
  */
-internal class PageManager {
+internal class PageManager : Iterable<Page> {
 
     private val pages = mutableListOf<Page>()
     private var adapter: Adapter? = null
@@ -79,8 +79,8 @@ internal class PageManager {
         return pages.first { it.number == number }
     }
 
-    internal fun forEachPage(action: (Page) -> Unit) {
-        pages.forEach(action)
+    override fun iterator(): Iterator<Page> {
+        return pages.iterator()
     }
 
     /**
@@ -114,9 +114,9 @@ internal class PageManager {
 
     internal var update = 0
 
-    internal fun setResults(page: Page, source: Source<*>, data: List<Element<*>>) {
-        executor.execute {
-            val adapter = adapter ?: return@execute
+    internal fun setResults(page: Page, source: Source<*>, data: List<Element<*>>, sync: Boolean) {
+        val task = Runnable {
+            val adapter = adapter ?: return@Runnable
             val list = page.startUpdate()
             val oldList = ArrayList(list)
             ElementsLogger.v("PageManager Update $update started by source ${source::class.java.simpleName}, items: ${data.size}")
@@ -168,14 +168,21 @@ internal class PageManager {
             // Log.w("PageManager", "Update $update: NewList elements: ${list.joinToString(prefix = "[", postfix = "]", transform = { it.data.toString() })}")
             val callback = DiffCallback(oldList, list)
             val result = DiffUtil.calculateDiff(callback, true)
-            uiExecutor.post {
-                // Log.e("PageManager", "Update $update: Dispatched updates to adapter. 1")
+            val completion = Runnable {
                 page.endUpdate()
-                // Log.e("PageManager", "Update $update: Dispatched updates to adapter. 2")
                 result.dispatchUpdatesTo(DiffDispatcher(page))
-                // Log.e("PageManager", "Update $update: Dispatched updates to adapter. 3")
                 update++
             }
+            if (sync) {
+                completion.run()
+            } else {
+                uiExecutor.post(completion)
+            }
+        }
+        if (sync) {
+            task.run()
+        } else {
+            executor.execute(task)
         }
     }
 
