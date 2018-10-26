@@ -291,7 +291,7 @@ public final class Adapter private constructor(
      * by querying the element for that position.
      */
     override fun getItemViewType(position: Int): Int {
-        return pageManager.elementAt(position).element!!.type
+        return pageManager.elementAt(position, true)!!.element.type
     }
 
     internal fun presenterForType(viewType: Int): Presenter<*> {
@@ -323,8 +323,8 @@ public final class Adapter private constructor(
     @Suppress("UNCHECKED_CAST")
     override fun onBindViewHolder(holder: Presenter.Holder, position: Int) {
         val presenter = typeMap.get(holder.itemViewType) as Presenter<Any>
-        val query = pageManager.elementAt(position)
-        val page = query.page!!
+        val query = pageManager.elementAt(position, true)!!
+        val page = query.page
         val element = query.element as Element<Any>
         Log.i("Adapter", "onBindViewHolder, type: ${holder.itemViewType}, " +
                 "elementType: ${element.type}, " +
@@ -347,6 +347,15 @@ public final class Adapter private constructor(
     public fun openPage() {
         val page = pageManager.requestPage()
         onPageCreated(page)
+    }
+
+    /**
+     * Queries the page manager to find the
+     * element at the given position. This can be an expensive
+     * computation so the usage should be limited.
+     */
+    public fun elementAt(position: Int): ElementAtResult? {
+        return pageManager.elementAt(position, false)
     }
 
 }

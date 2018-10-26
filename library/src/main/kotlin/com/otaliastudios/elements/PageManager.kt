@@ -4,7 +4,6 @@ import android.os.Handler
 import android.os.Looper
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
-import android.util.Log
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
@@ -54,23 +53,26 @@ internal class PageManager {
         return count
     }
 
-    internal class Query(var page: Page?, var element: Element<*>?, var positionInPage: Int)
+    private val elementAtResult = ElementAtResult()
 
-    private val query = Query(null, null, 0)
-
-    internal fun elementAt(position: Int): Query {
+    internal fun elementAt(position: Int, doThrow: Boolean): ElementAtResult? {
         var before = 0
         for (page in pages) {
             val count = page.elementCount()
             if (position >= before && position < before + count) {
-                query.page = page
-                query.element = page.elementAt(position - before)
-                query.positionInPage = position - before
-                return query
+                elementAtResult.page = page
+                elementAtResult.element = page.elementAt(position - before)
+                elementAtResult.positionInPage = position - before
+                elementAtResult.position = position
+                return elementAtResult
             }
             before += count
         }
-        throw RuntimeException("No page for position $position")
+        if (doThrow) {
+            throw RuntimeException("No page for position $position")
+        } else {
+            return null
+        }
     }
 
     internal fun pageAt(number: Int): Page {
