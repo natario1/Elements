@@ -37,14 +37,14 @@ abstract class DataBindingPresenter<T: Any, DB: ViewDataBinding>(
     override fun onBind(page: Page, holder: Holder, element: Element<T>) {
         super.onBind(page, holder, element)
         val binding = holder.get<DB>("binding")
-        onBind(page, binding, element)
+        onBind(page, holder, binding, element)
         binding.executePendingBindings()
     }
 
     /**
      * Called when it's time to bind the data to the binding object.
      */
-    protected open fun onBind(page: Page, binding: DB, element: Element<T>) {
+    protected open fun onBind(page: Page, holder: Holder, binding: DB, element: Element<T>) {
 
     }
 

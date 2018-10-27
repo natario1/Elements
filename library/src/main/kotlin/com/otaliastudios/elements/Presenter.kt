@@ -241,8 +241,8 @@ public abstract class Presenter<T: Any>(
                 return factory(getLayoutInflater(), parent)
             }
 
-            override fun onBind(page: Page, binding: D, element: Element<T>) {
-                super.onBind(page, binding, element)
+            override fun onBind(page: Page, holder: Holder, binding: D, element: Element<T>) {
+                super.onBind(page, holder, binding, element)
                 bind(binding, element.data!!)
             }
         }
