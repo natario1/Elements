@@ -14,7 +14,7 @@ A collection of modular elements for `RecyclerView` lists, alternative to
 - **Animations**: give `Presenters`s fine grained control over how to animate each item
 
 ```groovy
-implementation 'com.otaliastudios:elements:0.2.8'
+implementation 'com.otaliastudios:elements:0.3.0'
 ```
 
 If you are curious about how it works in practice, take a look at the sample app in the `app` module.
