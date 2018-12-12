@@ -16,8 +16,11 @@ public final class Adapter private constructor(
         private val lifecycleOwner: LifecycleOwner,
         private val sources: MutableList<Source<*>>,
         private val presenters: List<Presenter<*>>,
-        private val pager: Pager
+        private val pager: Pager,
+        private val autoScrollMode: Int,
+        private val autoScrollSmooth: Boolean
 ) : RecyclerView.Adapter<Presenter.Holder>(), LifecycleOwner, LifecycleObserver {
+
 
     /**
      * Constructs an [Adapter] with the given sources and presenters.
@@ -28,6 +31,8 @@ public final class Adapter private constructor(
         private val sources = mutableListOf<Source<*>>()
         private val presenters = mutableListOf<Presenter<*>>()
         private var pager: Pager? = null
+        private var autoScrollMode: Int = AUTOSCROLL_OFF
+        private var autoScrollSmooth: Boolean = false
 
         /**
          * Sets the pager for this adapter,
@@ -57,28 +62,62 @@ public final class Adapter private constructor(
         }
 
         /**
+         * Sets the adapter auto scroll behavior. One of
+         * - [AUTOSCROLL_OFF]: No auto scroll behavior
+         * - [AUTOSCROLL_POSITION_0]: Auto scroll when items are inserted at position 0
+         * - [AUTOSCROLL_POSITION_ANY]: Auto scroll when items are inserted at any position
+         * Returns this for chaining.
+         */
+        public fun setAutoScrollMode(mode: Int, smooth: Boolean = false): Builder {
+            autoScrollMode = mode
+            autoScrollSmooth = smooth
+            return this
+        }
+
+        /**
          * Builds the adapter with the given options.
          * Use [into] to inject directly into a recycler.
          */
         public fun build(): Adapter {
-            if (pager == null) {
-                pager = PageSizePager(pageSizeHint)
-            }
-            return Adapter(lifecycleOwner, sources, presenters, pager!!)
+            val pager = pager ?: PageSizePager(pageSizeHint)
+            return Adapter(lifecycleOwner, sources, presenters, pager, autoScrollMode, autoScrollSmooth)
         }
 
         /**
          * Builds the adapter and injects it into
          * the given [RecyclerView].
          */
-        public fun into(recyclerView: RecyclerView) {
+        public fun into(recyclerView: RecyclerView): Adapter {
             val adapter = build()
             recyclerView.itemAnimator = Animator(adapter)
             recyclerView.adapter = adapter
+            return adapter
         }
     }
 
     companion object {
+
+        /**
+         * Constant for [Builder.autoScrollMode].
+         * This means that no autoscroll will be performed.
+         */
+        const val AUTOSCROLL_OFF = 0
+
+        /**
+         * Constant for [Builder.autoScrollMode].
+         * This means that, when items are inserted at position 0,
+         * the adapter will automatically scroll any attached RecyclerView
+         * to position 0 so that new items are visible.
+         */
+        const val AUTOSCROLL_POSITION_0 = 1
+
+        /**
+         * Constant for [Builder.autoScrollMode].
+         * This means that, when items are inserted at any position,
+         * the adapter will automatically scroll any attached RecyclerView
+         * to that position so that new items are visible.
+         */
+        const val AUTOSCROLL_POSITION_ANY = 2
 
         /**
          * Shorthand for creating a [Builder] for the given
@@ -331,7 +370,7 @@ public final class Adapter private constructor(
      * In the future we want to just do a no-op.
      */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Presenter.Holder {
-        Log.i("Adapter", "onCreateViewHolder, type: $viewType")
+        ElementsLogger.v( "onCreateViewHolder, type: $viewType")
         return presenterForType(viewType).createHolder(parent, viewType)
     }
 
@@ -342,12 +381,12 @@ public final class Adapter private constructor(
      * with pending updates. But it should be fixed now.
      */
     @Suppress("UNCHECKED_CAST")
-    override fun onBindViewHolder(holder: Presenter.Holder, position: Int) {
+    override fun onBindViewHolder(holder: Presenter.Holder, position: Int, payloads: MutableList<Any>) {
         val presenter = typeMap.get(holder.itemViewType) as Presenter<Any>
         val query = pageManager.elementAt(position, true)!!
         val page = query.page
         val element = query.element as Element<Any>
-        Log.i("Adapter", "onBindViewHolder, type: ${holder.itemViewType}, " +
+        ElementsLogger.v("onBindViewHolder, type: ${holder.itemViewType}, " +
                 "elementType: ${element.type}, " +
                 "position: $position, " +
                 "presenter: ${presenter.javaClass.simpleName}, " +
@@ -356,18 +395,36 @@ public final class Adapter private constructor(
         if (element.type != holder.itemViewType) {
             throw RuntimeException("Something is wrong here...")
         }
-        presenter.onBind(page, holder, element)
+        presenter.onBind(page, holder, element, payloads)
         pager.onElementBound(page, element, presenter, position, query.positionInPage)
     }
 
+    // We use the payloads version.
+    override fun onBindViewHolder(holder: Presenter.Holder, position: Int) {}
+
     /**
      * Request a new page to be opened.
-     * This can be used in conjunction with an infinite [pageSizeHint],
+     * This can be used in conjunction with a [NoPagesPager],
      * in order to disable automatic page opening.
+     *
+     * Note that sources might block this request by returning false in their
+     * [Source.canOpenPage] callback.
+     *
+     * Returns true if the page was correctly opened, false if it was blocked.
      */
-    public fun openPage() {
-        val page = pageManager.requestPage()
-        onPageCreated(page)
+    public fun requestPage(): Boolean {
+        val current = pageManager.lastOrNull()
+        val should = sources.all {
+            it.canOpenNextPage(current)
+        }
+        if (should) {
+            val page = pageManager.requestPage()
+            onPageCreated(page)
+            return true
+        } else {
+            ElementsLogger.w("requestPage was blocked by one of the sources. Current page: $current ${current?.number}")
+            return false
+        }
     }
 
     /**
@@ -379,5 +436,42 @@ public final class Adapter private constructor(
         return pageManager.elementAt(position, false)
     }
 
+    // Auto scroll to top during inserts.
+
+    private val recyclerViews = mutableSetOf<RecyclerView>()
+
+    init {
+        registerAdapterDataObserver(object: RecyclerView.AdapterDataObserver() {
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                super.onItemRangeInserted(positionStart, itemCount)
+                if (autoScrollMode == AUTOSCROLL_POSITION_0 && positionStart == 0) {
+                    performAutoScroll(0)
+                } else if (autoScrollMode == AUTOSCROLL_POSITION_ANY) {
+                    performAutoScroll(positionStart)
+                }
+            }
+        })
+    }
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        recyclerViews.add(recyclerView)
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+        recyclerViews.remove(recyclerView)
+    }
+
+    private fun performAutoScroll(position: Int) {
+        recyclerViews.forEach {
+            if (autoScrollSmooth) {
+                it.smoothScrollToPosition(position)
+            } else {
+                it.scrollToPosition(position)
+            }
+        }
+    }
 }
+
 

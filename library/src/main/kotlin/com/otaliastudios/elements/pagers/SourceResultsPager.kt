@@ -2,7 +2,6 @@ package com.otaliastudios.elements.pagers
 
 import com.otaliastudios.elements.*
 import com.otaliastudios.elements.extensions.MainSource
-import kotlin.math.abs
 
 open class SourceResultsPager(
         val fraction: Float = 0.8F,
@@ -24,7 +23,7 @@ open class SourceResultsPager(
                 val trigger = (sourceResults.size * fraction).toInt()
                 ElementsLogger.w("SourceResultsPager: comparing with ${trigger - 1}")
                 if (sourcePosition == maxOf(trigger - 1, 0)) {
-                    openPage()
+                    requestPage()
                 }
             }
         }

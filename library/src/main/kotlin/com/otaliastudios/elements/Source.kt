@@ -1,14 +1,13 @@
 package com.otaliastudios.elements
 
+import androidx.annotation.UiThread
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import com.otaliastudios.elements.extensions.ListSource
 import com.otaliastudios.elements.extensions.LiveDataSource
-import com.otaliastudios.elements.extensions.PaginationPresenter
 import com.otaliastudios.elements.extensions.PaginationSource
 import com.otaliastudios.elements.extensions.DividerSource
-import kotlin.reflect.KClass
 
 /**
  * The data provider. Creates [Element]s to be managed by the [Adapter]
@@ -128,6 +127,19 @@ abstract class Source<T: Any> {
      * fetched by the previous page.
      */
     protected fun setKey(page: Page, key: Any) {
+        setKeyInternal(page, key)
+    }
+
+    /**
+     * Clears the key that was previously set using [setKey].
+     * Note that this will invoke the key live data as returned
+     * by [getKeyLiveData].
+     */
+    protected fun clearKey(page: Page) {
+        setKeyInternal(page, null)
+    }
+
+    private fun setKeyInternal(page: Page, key: Any?) {
         if (!keys.containsKey(page.number)) {
             keys[page.number] = MutableLiveData()
         }
@@ -230,6 +242,26 @@ abstract class Source<T: Any> {
     public open fun areContentsTheSame(first: T, second: T) = first == second
 
     /**
+     * Returns the change payload in the case the adapter identified a 'change' operation,
+     * that is, [areItemsTheSame] return true but [areContentsTheSame] returned false.
+     * This will be passed to the presenters.
+     */
+    public open fun getItemsChangePayload(first: T, second: T): Any? = null
+
+    /**
+     * Special version of [areItemsTheSame] called to compare our items with items of one of our
+     * dependencies, even if the types don't match. Defaults to false, but can be used for
+     * seamlessly swapping data between sources.
+     */
+    public open fun <E: Any> areItemsTheSame(own: T, dependency: Source<E>, other: E?): Boolean = false
+
+    /**
+     * Dependency item version of [getItemsChangePayload]. Called when the dependency version of
+     * [areItemsTheSame] returns true.
+     */
+    public open fun <E: Any> getItemsChangePayload(own: T, dependency: Source<E>, other: E?): Any? = null
+
+    /**
      * Request a new page after the given page.
      * This is a no-op if the page is not the last page, and if
      * there are currently no adapters bound to this Source.
@@ -237,9 +269,27 @@ abstract class Source<T: Any> {
     protected fun requestPage(after: Page) {
         if (after.isLastPage()) {
             for (adapter in adapters) {
-                adapter.openPage()
+                adapter.requestPage()
             }
         }
+    }
+
+    fun canOpenNextPage(previous: Page?): Boolean {
+        val key = previous?.let { getKey<Any>(it) }
+        return canOpenPage(previous, key)
+    }
+
+    /**
+     * Whether this source can handle a new page. Sometimes you are not ready to open the new page,
+     * maybe because the previous page did not return a key yet. There are two approaches:
+     * - return true here, let the new page be opened, and in the new page, observe the previous page key liveData
+     * - return false here, so new page is not opened. However, remember that a new page *was* requested and we
+     *   aborted the request. It can be requested again using [requestPage].
+     *
+     * If false is returned, the [Adapter.requestPage] call is aborted.
+     */
+    public open fun canOpenPage(previous: Page?, key: Any?): Boolean {
+        return true
     }
 
     /**
@@ -257,10 +307,21 @@ abstract class Source<T: Any> {
         private var attachedSource: LiveData<List<T>>? = null
 
         fun postValue(value: Result<T>?) {
-            if (value != null) {
+            if (page.isUiThread()) {
+                setValue(value)
+            } else if (value != null) {
                 postValue(onPostResult(page, value))
             } else {
                 super.postValue(null)
+            }
+        }
+
+        @UiThread
+        fun setValue(value: Result<T>?) {
+            if (value != null) {
+                setValue(onPostResult(page, value))
+            } else {
+                super.setValue(null)
             }
         }
 
@@ -270,7 +331,7 @@ abstract class Source<T: Any> {
             addSource(attachedSource!!) {
                 if (it != null) {
                     val elements = createElements(it)
-                    postValue(Result(elements))
+                    setValue(Result(elements))
                 }
             }
         }

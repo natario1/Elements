@@ -23,6 +23,7 @@ abstract class DataBindingPresenter<T: Any, DB: ViewDataBinding>(
 
     final override fun onCreate(parent: ViewGroup, elementType: Int): Holder {
         val binding = onCreateBinding(parent, elementType)
+        binding.setLifecycleOwner(this) // Is this the right thing to do?
         val holder = Holder(binding.root)
         holder.set("binding", binding)
         return holder

@@ -1,5 +1,7 @@
 package com.otaliastudios.elements
 
+import android.annotation.SuppressLint
+import android.os.Looper
 import androidx.annotation.UiThread
 import java.util.*
 import java.util.concurrent.Semaphore
@@ -10,7 +12,52 @@ import kotlin.collections.ArrayList
  * It provides utilities to update the page data on the fly, and methods
  * to query the current page state.
  *
- * It uses a [Semaphore] and two different lists to manage and lock updates.
+ * Synchronization:
+ * This is how it should be:
+ *
+ * - AnyThread: Users must notify that an update has started ([startUpdate]).
+ *   At this point we acquire the lock.
+ *
+ * - AnyThread: We copy the list of elements to a working, WIP list.
+ *   During this time, if the adapter queries us, we return the old list which makes sense.
+ *
+ * - AnyThread: The user modifies the WIP list.
+ *
+ * - AnyThread: Users notify that the update has ended ([endUpdate]). We post the following action
+ *   to the UI thread. If we are on the UI thread already, we just execute it:
+ *
+ *   - UiThread: Copy back the WIP list to the main list (it's actually an assignment so it's fast)
+ *   - UiThread: Call notifyDataSetChanged()
+ *   - UiThread: Release the lock
+ *
+ *   This is not 100% safe to user actions. Once we release the lock, future actions can be started,
+ *   but the adapter might still not have queried this page, because notifyDataSetChanged() posts the
+ *   changes on the next layout pass.
+ *
+ *   However, for this to break, The following actions should happen:
+ *   - A: We end an update and call notifyDataSetChanged()
+ *   - B: We release the lock
+ *   - C: Before the adapter runs, we start another update (and aquire the lock)
+ *   - D: Before the adapter runs, we END that update (and release the lock)
+ *   - E: The adapter runs the old cycle and detects an inconsistency.
+ *   Since the time between B and E events is extremely small, I would say that this is extremely
+ *   unlikely. If this proves to be a problem, we should release the lock in the next UI pass,
+ *   but this assumes that notify() behavior does not changes.
+ *
+ * The above is the policy for updates coming from [PageManager].
+ * As said, they can start from any thread, but the lock releasing is streamlined to
+ * the UI thread.
+ *
+ * This means that there is a potential deadlock when start() is called from the UI thread,
+ * because if there's another update going on, start() will wait for it, but the previous update
+ * will wait for the UI thread itself to end. So UI starts() are a problem.
+ *
+ * - When they come from lib users (Page APIs): we use the dirty [executePageApi]
+ * - When they come from PageManager with the sync option: this is 'addressed' ignoring the sync flag
+ *   if the page is in update. But that function is not synchronized.
+ *
+ * Should find another solution for both, and that does this without creating new threads or
+ * streamlining starts(). Also currently the PageManager requires
  */
 public class Page internal constructor(internal val pageManager: PageManager, internal val number: Int) {
 
@@ -55,28 +102,55 @@ public class Page internal constructor(internal val pageManager: PageManager, in
      */
     public fun isLastPage() = next() == null
 
+
+    internal fun isInUpdate() = semaphore.availablePermits() == 0
+
+    internal fun isUiThread() = pageManager.isUiThread()
+
     /**
-     * The order should be:
-     * - acquire the lock (Worker?)
-     * - edit the raw elements (Worker?)
-     * - set raw elements to elements (UI)
-     * - release the lock (UI)
-     * - notify the adapter (UI)
-     *
-     * We *could* probably notify the adapter before calling endUpdate(),
-     * because notify* will post updates on the next UI cycle as far as I know.
-     * This would make code here more readable. Anyway, let's not mess things
-     * up right now.
+     * To avoid deadlocks, since locks are released on the UI thread,
+     * this must be called either from a WorkerThread, or from the UI thread
+     * when there are no current updates.
      */
-    internal fun startUpdate(): MutableList<Element<*>> {
+    internal fun startUpdate(debug: String): MutableList<Element<*>> {
+        log("startUpdate", debug)
+        if (isUiThread() && isInUpdate()) {
+            throw RuntimeException("Deadlock detected in page $this during update $debug. Probably coming from PageManager with sync flag?")
+        }
         semaphore.acquire()
         rawElements = ArrayList(elements) // Important.
         return rawElements
     }
 
-    internal fun endUpdate() {
+    @UiThread
+    internal fun endUpdate(debug: String, notifySyncAction: ((PageManager) -> Unit)?) {
+        log("endUpdate", debug)
         elements = rawElements
+        notifySyncAction?.invoke(pageManager)
         semaphore.release()
+    }
+
+    private fun log(event: String, message: String) {
+        ElementsLogger.v("$event, page($number), " +
+                "el(${elements.size}), " +
+                "rawEl(${rawElements.size}), " +
+                "uiThread(${isUiThread()}), " +
+                "message($message)")
+    }
+
+
+    // This is not the most elegant thing I have ever seen.
+    private fun executePageApi(action: () -> Unit) {
+        if (!isUiThread()) {
+            throw IllegalStateException("Page APIs must be called from the UI thread.")
+        }
+        if (!isInUpdate()) {
+            action()
+        } else {
+            PageManager.uiExecutor.post {
+                executePageApi(action)
+            }
+        }
     }
 
     /**
@@ -84,13 +158,17 @@ public class Page internal constructor(internal val pageManager: PageManager, in
      * Waits for other pending updates to finish so this can
      * actually block the UI thread.
      */
-    @UiThread
+    @UiThread // API
     public fun clear() {
-        val list = startUpdate()
-        val count = list.size
-        list.clear()
-        endUpdate()
-        pageManager.notifyPageItemRangeRemoved(this, 0, count)
+        executePageApi {
+            val message = "clear"
+            val list = startUpdate(message)
+            val count = list.size
+            list.clear()
+            endUpdate(message) {
+                it.notifyPageItemRangeRemoved(this, 0, count)
+            }
+        }
     }
 
     /**
@@ -98,15 +176,19 @@ public class Page internal constructor(internal val pageManager: PageManager, in
      * Waits for other pending updates to finish so this can
      * actually block the UI thread.
      */
-    @UiThread
+    @UiThread // API
     public fun insertElement(position: Int, element: Element<*>) {
-        val list = startUpdate()
-        if (position >= 0 && position <= list.size) {
-            list.add(position, element)
-            endUpdate()
-            pageManager.notifyPageItemInserted(this, position)
-        } else {
-            endUpdate()
+        executePageApi {
+            val message = "insertElement position $position"
+            val list = startUpdate(message)
+            if (position >= 0 && position <= list.size) {
+                list.add(position, element)
+                endUpdate(message) {
+                    it.notifyPageItemInserted(this, position)
+                }
+            } else {
+                endUpdate(message, null)
+            }
         }
     }
 
@@ -115,15 +197,19 @@ public class Page internal constructor(internal val pageManager: PageManager, in
      * Waits for other pending updates to finish so this can
      * actually block the UI thread.
      */
-    @UiThread
+    @UiThread // API
     public fun removeElement(position: Int) {
-        val list = startUpdate()
-        if (position >= 0 && position < list.size) {
-            list.removeAt(position)
-            endUpdate()
-            pageManager.notifyPageItemRemoved(this, position)
-        } else {
-            endUpdate()
+        executePageApi {
+            val message = "removeElement position $position"
+            val list = startUpdate(message)
+            if (position >= 0 && position < list.size) {
+                list.removeAt(position)
+                endUpdate(message) {
+                    it.notifyPageItemRemoved(this, position)
+                }
+            } else {
+                endUpdate(message, null)
+            }
         }
     }
 
@@ -132,16 +218,20 @@ public class Page internal constructor(internal val pageManager: PageManager, in
      * Waits for other pending updates to finish so this can
      * actually block the UI thread.
      */
-    @UiThread
+    @UiThread // API
     public fun removeElement(element: Element<*>) {
-        val list = startUpdate()
-        val index = list.indexOf(element)
-        if (index >= 0) {
-            list.removeAt(index)
-            endUpdate()
-            pageManager.notifyPageItemRemoved(this, index)
-        } else {
-            endUpdate()
+        executePageApi {
+            val message = "removeElement element $element"
+            val list = startUpdate(message)
+            val index = list.indexOf(element)
+            if (index >= 0) {
+                list.removeAt(index)
+                endUpdate(message) {
+                    it.notifyPageItemRemoved(this, index)
+                }
+            } else {
+                endUpdate(message, null)
+            }
         }
     }
 
@@ -150,16 +240,20 @@ public class Page internal constructor(internal val pageManager: PageManager, in
      * Waits for other pending updates to finish so this can
      * actually block the UI thread.
      */
-    @UiThread
+    @UiThread // API
     fun replaceElement(item: Element<*>, withItem: Element<*>) {
-        val list = startUpdate()
-        val position = list.indexOf(item)
-        if (position >= 0) {
-            list[position] = withItem
-            endUpdate()
-            pageManager.notifyPageItemChanged(this, position)
-        } else {
-            endUpdate()
+        executePageApi {
+            val message = "replaceElement $item with $withItem"
+            val list = startUpdate(message)
+            val position = list.indexOf(item)
+            if (position >= 0) {
+                list[position] = withItem
+                endUpdate(message) {
+                    it.notifyPageItemChanged(this, position)
+                }
+            } else {
+                endUpdate(message, null)
+            }
         }
     }
 
@@ -169,16 +263,21 @@ public class Page internal constructor(internal val pageManager: PageManager, in
      * Waits for other pending updates to finish so this can
      * actually block the UI thread.
      */
-    @UiThread
+    @UiThread // API
     fun insertElements(position: Int, elements: Collection<Element<*>>) {
-        val list = startUpdate()
-        if (position >= 0 && position <= list.size && elements.isNotEmpty()) {
-            list.addAll(position, elements)
-            endUpdate()
-            pageManager.notifyPageItemRangeInserted(this, position, elements.size)
-        } else {
-            endUpdate()
+        executePageApi {
+            val message = "insertElements position $position size ${elements.size}"
+            val list = startUpdate(message)
+            if (position >= 0 && position <= list.size && elements.isNotEmpty()) {
+                list.addAll(position, elements)
+                endUpdate(message) {
+                    it.notifyPageItemRangeInserted(this, position, elements.size)
+                }
+            } else {
+                endUpdate(message, null)
+            }
         }
+
     }
 
     /**
@@ -186,21 +285,26 @@ public class Page internal constructor(internal val pageManager: PageManager, in
      * Waits for other pending updates to finish so this can
      * actually block the UI thread.
      */
-    @UiThread
+    @UiThread // API
     fun replaceElements(position: Int, vararg elements: Element<*>) {
-        val list = startUpdate()
-        if (position >= 0 && position + elements.size <= list.size && elements.isNotEmpty()) {
-            var offset = 0
-            for (element in elements) {
-                list[position + offset] = element
-                offset += 1
+        executePageApi {
+            val message = "replaceElements position $position size ${elements.size}"
+            val list = startUpdate(message)
+            if (position >= 0 && position + elements.size <= list.size && elements.isNotEmpty()) {
+                var offset = 0
+                for (element in elements) {
+                    list[position + offset] = element
+                    offset += 1
+                }
+                endUpdate(message) {
+                    it.notifyPageItemRangeChanged(this, position, elements.size)
+                }
             }
-            endUpdate()
-            pageManager.notifyPageItemRangeChanged(this, position, elements.size)
+            else {
+                endUpdate(message, null)
+            }
         }
-         else {
-            endUpdate()
-        }
+
     }
 
     /**
@@ -208,20 +312,25 @@ public class Page internal constructor(internal val pageManager: PageManager, in
      * Waits for other pending updates to finish so this can
      * actually block the UI thread.
      */
-    @UiThread
+    @UiThread // API
     fun removeElements(position: Int, count: Int) {
-        val list = startUpdate()
-        if (position >= 0 && position + count < list.size && count > 0) {
-            var item = 0
-            for (i in position until position + count) {
-                list.removeAt(i)
-                item += 1
+        executePageApi {
+            val message = "removeElements position $position count $count"
+            val list = startUpdate(message)
+            if (position >= 0 && position + count < list.size && count > 0) {
+                var item = 0
+                for (i in position until position + count) {
+                    list.removeAt(i)
+                    item += 1
+                }
+                endUpdate(message) {
+                    it.notifyPageItemRangeRemoved(this, position, count)
+                }
+            } else {
+                endUpdate(message, null)
             }
-            endUpdate()
-            pageManager.notifyPageItemRangeRemoved(this, position, count)
-        } else {
-            endUpdate()
         }
+
     }
 
     /**
@@ -229,15 +338,20 @@ public class Page internal constructor(internal val pageManager: PageManager, in
      * Waits for other pending updates to finish so this can
      * actually block the UI thread.
      */
-    @UiThread
+    @UiThread // API
     fun notifyItemChanged(position: Int) {
-        val list = startUpdate()
-        if (position >= 0 && position < list.size) {
-            endUpdate()
-            pageManager.notifyPageItemChanged(this, position)
-        } else {
-            endUpdate()
+        executePageApi {
+            val message = "notifyItemChanged position $position"
+            val list = startUpdate(message)
+            if (position >= 0 && position < list.size) {
+                endUpdate(message) {
+                    it.notifyPageItemChanged(this, position)
+                }
+            } else {
+                endUpdate(message, null)
+            }
         }
+
     }
 
     /**
@@ -245,15 +359,19 @@ public class Page internal constructor(internal val pageManager: PageManager, in
      * Waits for other pending updates to finish so this can
      * actually block the UI thread.
      */
-    @UiThread
+    @UiThread // API
     fun notifyItemChanged(element: Element<*>) {
-        val list = startUpdate()
-        val index = list.indexOf(element)
-        if (index >= 0) {
-            endUpdate()
-            pageManager.notifyPageItemChanged(this, index)
-        } else {
-            endUpdate()
+        executePageApi {
+            val message = "notifyItemChanged element $element"
+            val list = startUpdate(message)
+            val index = list.indexOf(element)
+            if (index >= 0) {
+                endUpdate(message) {
+                    it.notifyPageItemChanged(this, index)
+                }
+            } else {
+                endUpdate(message, null)
+            }
         }
     }
 

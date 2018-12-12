@@ -6,7 +6,7 @@ abstract class Pager {
 
     abstract fun onElementBound(page: Page, element: Element<*>, presenter: Presenter<*>, absolutePosition: Int, pagePosition: Int)
 
-    fun openPage() {
-        adapter.openPage()
+    fun requestPage() {
+        adapter.requestPage()
     }
 }

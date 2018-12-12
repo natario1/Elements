@@ -95,6 +95,16 @@ public abstract class Presenter<T: Any>(
      */
     @CallSuper
     @UiThread
+    public open fun onBind(page: Page, holder: Holder, element: Element<T>, payloads: List<Any>) {
+        onBind(page, holder, element)
+    }
+
+    /**
+     * Called when it's time to bind model values, represented by the [Element], to views
+     * represented by the given [Holder], for the given [Page].
+     */
+    @CallSuper
+    @UiThread
     public open fun onBind(page: Page, holder: Holder, element: Element<T>) {
         val click = holder.itemView.findViewById(R.id.click) ?: holder.itemView
         click.setOnClickListener {

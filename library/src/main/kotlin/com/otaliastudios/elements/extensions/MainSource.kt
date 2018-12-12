@@ -20,9 +20,9 @@ import com.otaliastudios.elements.Source
  * @property emptyIndicatorEnabled whether we should emit an empty indicator when the source posts an empty list
  */
 abstract class MainSource<T: Any>(
-        private val loadingIndicatorsEnabled: Boolean = true,
-        private val errorIndicatorEnabled: Boolean = true,
-        private val emptyIndicatorEnabled: Boolean = true
+        protected var loadingIndicatorsEnabled: Boolean = true,
+        protected var errorIndicatorEnabled: Boolean = true,
+        protected var emptyIndicatorEnabled: Boolean = true
 ) : Source<T>() {
 
     companion object {
