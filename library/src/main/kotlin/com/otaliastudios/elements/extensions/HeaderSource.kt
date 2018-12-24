@@ -42,6 +42,7 @@ abstract class HeaderSource<Anchor: Any, Header: Any>() : Source<HeaderSource.Da
     }
 
     override fun insertBefore(page: Page, dependencies: List<Element<*>>, element: Element<*>, position: Int, available: Int): Int {
+        if (available <= 0) return 0
         @Suppress("UNCHECKED_CAST")
         val input = element.data as? Anchor
         val results = getResultsForPage(page)
