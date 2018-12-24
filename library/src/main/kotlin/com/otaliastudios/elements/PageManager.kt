@@ -224,6 +224,7 @@ internal class PageManager : Iterable<Page> {
         var dataIndex = 0
         var available = data.size
         fromDependencies.forEachIndexed { index, element ->
+            if (available <= 0) return@forEachIndexed
             val before = source.insertBefore(page, fromDependencies, element, index, available)
             val after = source.insertAfter(page, fromDependencies, element, index, available - before)
             available = available - before - after
