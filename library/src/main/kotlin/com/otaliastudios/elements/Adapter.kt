@@ -447,8 +447,38 @@ public final class Adapter private constructor(
         autoScrollSmooth = smooth
     }
 
+    /**
+     * Listener for auto scroll events. See [setAutoScrollMode] for
+     * auto scroll description. The listener will be invoked whenever autoscroll
+     * is performed.
+     */
+    public interface AutoScrollListener {
+
+        /**
+         * Auto scroll is being performed.
+         */
+        fun onAutoScroll(adapter: Adapter, recycler: RecyclerView, position: Int)
+    }
+
+    /**
+     * Adds a listener for auto scroll events (see [setAutoScrollMode]).
+     * The listener will be invoked when auto scroll is performed.
+     */
+    public fun addAutoScrollListener(listener: AutoScrollListener) {
+        autoScrollListeners.add(listener)
+    }
+
+    /**
+     * Removes a previously added auto sroll listener.
+     * See [addAutoScrollListener].
+     */
+    public fun removeAutoScrollListener(listener: AutoScrollListener) {
+        autoScrollListeners.remove(listener)
+    }
+
     // Auto scroll to top during inserts.
 
+    private val autoScrollListeners = mutableSetOf<AutoScrollListener>()
     private val recyclerViews = mutableSetOf<RecyclerView>()
 
     init {
@@ -480,6 +510,9 @@ public final class Adapter private constructor(
                 it.smoothScrollToPosition(position)
             } else {
                 it.scrollToPosition(position)
+            }
+            autoScrollListeners.forEach { listener ->
+                listener.onAutoScroll(this, it, position)
             }
         }
     }
