@@ -17,8 +17,8 @@ public final class Adapter private constructor(
         private val sources: MutableList<Source<*>>,
         private val presenters: List<Presenter<*>>,
         private val pager: Pager,
-        private val autoScrollMode: Int,
-        private val autoScrollSmooth: Boolean
+        private var autoScrollMode: Int,
+        private var autoScrollSmooth: Boolean
 ) : RecyclerView.Adapter<Presenter.Holder>(), LifecycleOwner, LifecycleObserver {
 
 
@@ -434,6 +434,17 @@ public final class Adapter private constructor(
      */
     public fun elementAt(position: Int): ElementAtResult? {
         return pageManager.elementAt(position, false)
+    }
+
+    /**
+     * Sets the adapter auto scroll behavior. One of
+     * - [AUTOSCROLL_OFF]: No auto scroll behavior
+     * - [AUTOSCROLL_POSITION_0]: Auto scroll when items are inserted at position 0
+     * - [AUTOSCROLL_POSITION_ANY]: Auto scroll when items are inserted at any position
+     */
+    public fun setAutoScrollMode(mode: Int, smooth: Boolean = false) {
+        autoScrollMode = mode
+        autoScrollSmooth = smooth
     }
 
     // Auto scroll to top during inserts.
