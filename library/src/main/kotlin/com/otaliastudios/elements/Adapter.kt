@@ -370,7 +370,9 @@ public final class Adapter private constructor(
      * In the future we want to just do a no-op.
      */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Presenter.Holder {
-        ElementsLogger.v( "onCreateViewHolder, type: $viewType")
+        if (ElementsLogger.verbose()) {
+            ElementsLogger.v("onCreateViewHolder, type: $viewType")
+        }
         return presenterForType(viewType).createHolder(parent, viewType)
     }
 
@@ -386,12 +388,14 @@ public final class Adapter private constructor(
         val query = pageManager.elementAt(position, true)!!
         val page = query.page
         val element = query.element as Element<Any>
-        ElementsLogger.v("onBindViewHolder, type: ${holder.itemViewType}, " +
-                "elementType: ${element.type}, " +
-                "position: $position, " +
-                "presenter: ${presenter.javaClass.simpleName}, " +
-                "data: ${element.data?.javaClass?.simpleName}, " +
-                "source: ${element.source.javaClass.simpleName}")
+        if (ElementsLogger.verbose()) {
+            ElementsLogger.v("onBindViewHolder, type: ${holder.itemViewType}, " +
+                    "elementType: ${element.type}, " +
+                    "position: $position, " +
+                    "presenter: ${presenter.javaClass.simpleName}, " +
+                    "data: ${element.data?.javaClass?.simpleName}, " +
+                    "source: ${element.source.javaClass.simpleName}")
+        }
         if (element.type != holder.itemViewType) {
             throw RuntimeException("Something is wrong here...")
         }

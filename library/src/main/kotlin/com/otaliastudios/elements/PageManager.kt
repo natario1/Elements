@@ -191,7 +191,9 @@ internal class PageManager : Iterable<Page> {
         val page = op.page
         val newList = page.startUpdate("performSyncUpdate")
         val oldList = newList.toList()
-        ElementsLogger.v("PageManager performSyncUpdate for update $debugUpdate. Executing. Source: ${op.source::class.java.simpleName}")
+        if (ElementsLogger.verbose()) {
+            ElementsLogger.v("PageManager performSyncUpdate for update $debugUpdate. Executing. Source: ${op.source::class.java.simpleName}")
+        }
         performPageUpdate(adapter, op, newList)
         val callback = DiffCallback(adapter, oldList, newList)
         val result = DiffUtil.calculateDiff(callback, true)
@@ -363,22 +365,30 @@ internal class PageManager : Iterable<Page> {
      */
     private inner class DiffDispatcher(private val page: Page): ListUpdateCallback {
         override fun onChanged(position: Int, count: Int, payload: Any?) {
-            ElementsLogger.v("DiffDispatcher ${hashCode()} onChanged, position: $position, count: $count")
+            if (ElementsLogger.verbose()) {
+                ElementsLogger.v("DiffDispatcher ${hashCode()} onChanged, position: $position, count: $count")
+            }
             notifyPageItemRangeChanged(page, position, count, payload)
         }
 
         override fun onMoved(fromPosition: Int, toPosition: Int) {
-            ElementsLogger.v("DiffDispatcher ${hashCode()} onMoved, fromPosition: $fromPosition, toPosition: $toPosition")
+            if (ElementsLogger.verbose()) {
+                ElementsLogger.v("DiffDispatcher ${hashCode()} onMoved, fromPosition: $fromPosition, toPosition: $toPosition")
+            }
             notifyPageItemMoved(page, fromPosition, toPosition)
         }
 
         override fun onInserted(position: Int, count: Int) {
-            ElementsLogger.v("DiffDispatcher ${hashCode()} onInserted, position: $position, count: $count")
+            if (ElementsLogger.verbose()) {
+                ElementsLogger.v("DiffDispatcher ${hashCode()} onInserted, position: $position, count: $count")
+            }
             notifyPageItemRangeInserted(page, position, count)
         }
 
         override fun onRemoved(position: Int, count: Int) {
-            ElementsLogger.v("DiffDispatcher ${hashCode()} onRemoved, position: $position, count: $count")
+            if (ElementsLogger.verbose()) {
+                ElementsLogger.v("DiffDispatcher ${hashCode()} onRemoved, position: $position, count: $count")
+            }
             notifyPageItemRangeRemoved(page, position, count)
         }
     }

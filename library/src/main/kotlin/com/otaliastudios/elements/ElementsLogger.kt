@@ -15,27 +15,37 @@ object ElementsLogger {
         this.level = level
     }
 
+    fun logs(level: Int): Boolean {
+        return this.level <= level
+    }
+
+    fun verbose() = logs(VERBOSE)
+
+    fun warns() = logs(WARN)
+
+    fun errors() = logs(ERROR)
+
     internal fun w(message: String) {
-        if (level <= WARN) Timber.w(message)
+        if (warns()) Timber.w(message)
     }
 
     internal fun w(throwable: Throwable, message: String) {
-        if (level <= WARN) Timber.w(throwable, message)
+        if (warns()) Timber.w(throwable, message)
     }
 
     internal fun e(message: String) {
-        if (level <= ERROR) Timber.e(message)
+        if (errors()) Timber.e(message)
     }
 
     internal fun e(throwable: Throwable, message: String) {
-        if (level <= ERROR) Timber.e(throwable, message)
+        if (errors()) Timber.e(throwable, message)
     }
 
     internal fun v(message: String) {
-        if (level <= VERBOSE) Timber.v(message)
+        if (verbose()) Timber.v(message)
     }
 
     internal fun v(throwable: Throwable, message: String) {
-        if (level <= VERBOSE) Timber.v(throwable, message)
+        if (verbose()) Timber.v(throwable, message)
     }
 }
