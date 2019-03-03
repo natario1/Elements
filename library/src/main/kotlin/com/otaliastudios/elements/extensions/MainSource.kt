@@ -66,12 +66,37 @@ abstract class MainSource<T: Any>(
     }
 
     override fun onPostResult(page: Page, result: Result<T>): List<Element<T>> {
-        if (page.isFirstPage()) {
-            if (errorIndicatorEnabled && result.error != null) {
-                val error = result.error
-                return listOf(createEmptyElement(ELEMENT_TYPE_ERROR, error))
-            } else if (emptyIndicatorEnabled && result.values.isEmpty()) {
+        val hasResults = result.values.isNotEmpty()
+        val hasError = result.error != null
+
+        // If first and only page, add the error/empty indicators.
+        if (page.isFirstPage() && page.isLastPage()) {
+            if (hasError && errorIndicatorEnabled) {
+                return listOf(createEmptyElement(ELEMENT_TYPE_ERROR, result.error))
+            } else if (!hasResults && emptyIndicatorEnabled) {
                 return listOf(createEmptyElement(ELEMENT_TYPE_EMPTY))
+            }
+        }
+
+        // If second page, remove stuff from the previous page,
+        // as long as the new page has data.
+        if (!page.isFirstPage()
+                && page.previous()!!.isFirstPage()
+                && hasResults) {
+            val first = page.previous()!!
+            if (errorIndicatorEnabled) {
+                first.elements().filter {
+                    it.type == ELEMENT_TYPE_ERROR && it.source === this
+                }.forEach {
+                    first.removeElement(it)
+                }
+            }
+            if (emptyIndicatorEnabled) {
+                first.elements().filter {
+                    it.type == ELEMENT_TYPE_EMPTY && it.source === this
+                }.forEach {
+                    first.removeElement(it)
+                }
             }
         }
         return super.onPostResult(page, result)

@@ -57,10 +57,11 @@ import kotlin.collections.ArrayList
  *   if the page is in update. But that function is not synchronized.
  *
  * Should find another solution for both, and that does this without creating new threads or
- * streamlining starts(). Also currently the PageManager requires
+ * streamlining starts().
  */
-public class Page internal constructor(internal val pageManager: PageManager, internal val number: Int) {
+public class Page internal constructor(pageManager: PageManager, internal val number: Int) {
 
+    private var pageManager: PageManager? = pageManager
     private val semaphore = Semaphore(1, true)
     private var elements = arrayListOf<Element<*>>()
     private var rawElements = arrayListOf<Element<*>>()
@@ -82,13 +83,13 @@ public class Page internal constructor(internal val pageManager: PageManager, in
      * Returns the previous [Page], if there is one,
      * or null if there isn't.
      */
-    public fun previous(): Page? = pageManager.previous(this)
+    public fun previous(): Page? = pageManager?.previous(this)
 
     /**
      * Returns the next [Page], if there is one,
      * or null if there isn't.
      */
-    public fun next(): Page? = pageManager.next(this)
+    public fun next(): Page? = pageManager?.next(this)
 
     /**
      * Returns true if this is the first page,
@@ -105,7 +106,7 @@ public class Page internal constructor(internal val pageManager: PageManager, in
 
     internal fun isInUpdate() = semaphore.availablePermits() == 0
 
-    internal fun isUiThread() = pageManager.isUiThread()
+    internal fun isUiThread() = PageManager.isUiThread()
 
     /**
      * To avoid deadlocks, since locks are released on the UI thread,
@@ -115,7 +116,8 @@ public class Page internal constructor(internal val pageManager: PageManager, in
     internal fun startUpdate(debug: String): MutableList<Element<*>> {
         log("startUpdate", debug)
         if (isUiThread() && isInUpdate()) {
-            throw RuntimeException("Deadlock detected in page $this during update $debug. Probably coming from PageManager with sync flag?")
+            throw RuntimeException("Deadlock detected in page $this during update $debug." +
+                    " Probably coming from PageManager with sync flag?")
         }
         semaphore.acquire()
         rawElements = ArrayList(elements) // Important.
@@ -123,10 +125,12 @@ public class Page internal constructor(internal val pageManager: PageManager, in
     }
 
     @UiThread
-    internal fun endUpdate(debug: String, notifySyncAction: ((PageManager) -> Unit)?) {
+    internal fun endUpdate(debug: String, notifyAction: ((PageManager) -> Unit)?) {
         log("endUpdate", debug)
-        elements = rawElements
-        notifySyncAction?.invoke(pageManager)
+        pageManager?.let {
+            elements = rawElements
+            notifyAction?.invoke(it)
+        }
         semaphore.release()
     }
 
@@ -151,6 +155,23 @@ public class Page internal constructor(internal val pageManager: PageManager, in
                 executePageApi(action)
             }
         }
+    }
+
+    internal fun release(): Int {
+        pageManager = null
+        val count = elementCount()
+        elements.clear()
+        return count
+
+        /* val manager = pageManager ?: return
+        pageManager = null
+        if (!isUiThread()) {
+            throw IllegalStateException("Page release() must be called from the UI thread.")
+        }
+        manager.notifyPageItemRangeRemoved(this, 0, elementCount()) */
+        // This should be reasonably safe. Even if we are in a update, the logic in endUpdate
+        // will not update the original list, making pending updates just useless.
+        // Again, there's no strict synchronization going on.
     }
 
     /**
@@ -223,7 +244,7 @@ public class Page internal constructor(internal val pageManager: PageManager, in
         executePageApi {
             val message = "removeElement element $element"
             val list = startUpdate(message)
-            val index = list.indexOf(element)
+            val index = list.indexOfFirst { it === element }
             if (index >= 0) {
                 list.removeAt(index)
                 endUpdate(message) {
@@ -241,13 +262,13 @@ public class Page internal constructor(internal val pageManager: PageManager, in
      * actually block the UI thread.
      */
     @UiThread // API
-    fun replaceElement(item: Element<*>, withItem: Element<*>) {
+    fun replaceElement(element: Element<*>, replacement: Element<*>) {
         executePageApi {
-            val message = "replaceElement $item with $withItem"
+            val message = "replaceElement $element with $replacement"
             val list = startUpdate(message)
-            val position = list.indexOf(item)
+            val position = list.indexOfFirst { it === element }
             if (position >= 0) {
-                list[position] = withItem
+                list[position] = replacement
                 endUpdate(message) {
                     it.notifyPageItemChanged(this, position)
                 }
@@ -364,7 +385,9 @@ public class Page internal constructor(internal val pageManager: PageManager, in
         executePageApi {
             val message = "notifyItemChanged element $element"
             val list = startUpdate(message)
-            val index = list.indexOf(element)
+            // Use strict equality instead of element equals(). If it changed,
+            // equals would be always false.
+            val index = list.indexOfFirst { it === element }
             if (index >= 0) {
                 endUpdate(message) {
                     it.notifyPageItemChanged(this, index)

@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
 import android.util.SparseArray
 import android.view.ViewGroup
+import androidx.annotation.UiThread
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.otaliastudios.elements.pagers.PageSizePager
 
@@ -20,7 +21,6 @@ public final class Adapter private constructor(
         private var autoScrollMode: Int,
         private var autoScrollSmooth: Boolean
 ) : RecyclerView.Adapter<Presenter.Holder>(), LifecycleOwner, LifecycleObserver {
-
 
     /**
      * Constructs an [Adapter] with the given sources and presenters.
@@ -135,14 +135,8 @@ public final class Adapter private constructor(
      */
     override fun getLifecycle() = lifecycleOwner.lifecycle
 
-    init {
-        lifecycle.addObserver(this)
-        for (presenter in presenters) {
-            presenter.owner = lifecycleOwner
-            presenter.adapter = this
-        }
-    }
-
+    private val autoScrollListeners = mutableSetOf<AutoScrollListener>()
+    private val recyclerViews = mutableSetOf<RecyclerView>()
     private val typeMap: SparseArray<Presenter<*>> = SparseArray()
     private val dependencyMap: MutableMap<Source<*>, MutableSet<Source<*>>> = mutableMapOf()
     private val reverseDependencyMap: MutableMap<Source<*>, MutableSet<Source<*>>> = mutableMapOf()
@@ -156,6 +150,12 @@ public final class Adapter private constructor(
     internal fun dependsOn(source: Source<*>, other: Source<*>) = getDependencies(source).contains(other)
 
     init {
+        lifecycle.addObserver(this)
+        for (presenter in presenters) {
+            presenter.owner = lifecycleOwner
+            presenter.adapter = this
+        }
+
         sources.forEach {
             // Let's initialize. Could do this lazily but that solution has threading issues
             // that would make everything slower.
@@ -237,7 +237,7 @@ public final class Adapter private constructor(
 
         // This branch is useless but helps understand what's going on.
         if (restoredCount == 0) {
-            onPageCreated(pageManager.pageAt(0))
+            onPageCreated(pageManager.first())
         } else {
 
             // Complications at this point: Let's say we recovered X pages from source A,
@@ -268,6 +268,7 @@ public final class Adapter private constructor(
 
     }
 
+    @Suppress("unused")
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     private fun onDestroy() {
         pageManager.unbind()
@@ -432,6 +433,57 @@ public final class Adapter private constructor(
     }
 
     /**
+     * Releases the last page.
+     * Sources will get the page closed event.
+     *
+     * Returns true if the operation was completed successfully.
+     */
+    @UiThread
+    public fun releasePage(): Boolean {
+        val page = pageManager.lastOrNull() ?: return false
+        // When creating a page, we do things in this order:
+        // 1. Add page to page manager
+        // 2. Call source.onPageOpened which returns the LiveData to subscribe
+        // 3. Observe this LiveData
+        // 4. Receive new elements and add to pager
+        // When destroying the page, I would be tempted to do things in the opposite order.
+        // However, it might be useful for sources to have a page that is still attached and has elements.
+        // Will think about it. For now the process is:
+        sources.forEach {
+            val data = it.closePage(page) // This detaches page from source (2)
+            data?.removeObservers(this) // This deobserves the LiveData (3)
+            if (data != null) it.onPageClosed(page) // Offer a callback
+        }
+        pageManager.releasePage(page) // Let PageManager do the rest
+        return true
+    }
+
+    /**
+     * Calls [releasePage] on all the current pages.
+     * Returns true if the operation was completed successfully.
+     *
+     * The first page will be automatically re-opened, which means that sources
+     * will receive another onPageOpened call.
+     */
+    @UiThread
+    public fun releasePages(releaseFirst: Boolean = true): Boolean {
+        var result = true
+        val pages = pageManager.count()
+        val count = if (releaseFirst) pages else pages - 1
+        repeat(count) {
+            result = result && releasePage()
+        }
+        return result
+    }
+
+    /**
+     * Returns the number of pages currently opened.
+     */
+    public fun getPageCount(): Int {
+        return pageManager.count()
+    }
+
+    /**
      * Queries the page manager to find the
      * element at the given position. This can be an expensive
      * computation so the usage should be limited.
@@ -482,8 +534,6 @@ public final class Adapter private constructor(
 
     // Auto scroll to top during inserts.
 
-    private val autoScrollListeners = mutableSetOf<AutoScrollListener>()
-    private val recyclerViews = mutableSetOf<RecyclerView>()
 
     init {
         registerAdapterDataObserver(object: RecyclerView.AdapterDataObserver() {
@@ -509,17 +559,24 @@ public final class Adapter private constructor(
     }
 
     private fun performAutoScroll(position: Int) {
-        recyclerViews.forEach {
-            if (autoScrollSmooth) {
-                it.smoothScrollToPosition(position)
-            } else {
-                it.scrollToPosition(position)
-            }
-            autoScrollListeners.forEach { listener ->
-                listener.onAutoScroll(this, it, position)
+        recyclerViews.forEach { recyclerView ->
+            // Not posting could cause the first item to disappear on some tests I did.
+            // It is too early and the LayoutManager messes up.
+            recyclerView.post {
+                if (autoScrollSmooth) {
+                    recyclerView.smoothScrollToPosition(position)
+                } else {
+                    recyclerView.scrollToPosition(position)
+                }
+                autoScrollListeners.forEach { listener ->
+                    listener.onAutoScroll(this, recyclerView, position)
+                }
             }
         }
     }
+
+    // If some recycler is computing layout, notifying will crash.
+    internal fun canNotifySafely() = recyclerViews.none { it.isComputingLayout }
 }
 
 

@@ -35,11 +35,14 @@ internal class PageManager : Iterable<Page> {
 
         // This can't be lazy
         internal val uiExecutor = Handler(Looper.getMainLooper())
+
+        internal fun isUiThread() = Thread.currentThread() == Looper.getMainLooper().thread
     }
 
     private fun countBefore(page: Page): Int {
-        var count = 0
-        for (current in pages) {
+        var count = 0 // Avoid creting iterator
+        for (i in 0 until pages.size) {
+            val current = pages[i]
             if (current == page) break
             count += current.elementCount()
         }
@@ -53,18 +56,33 @@ internal class PageManager : Iterable<Page> {
         return new
     }
 
+    internal fun releasePage(page: Page) {
+        // Start by removing, so, for instance, adapter getItemCount() is changed before notify*.
+        val start = countBefore(page)
+        pages.remove(page)
+        val count = page.release()
+        notifySafely { it.notifyItemRangeRemoved(start, count) }
+    }
+
     internal fun elementCount(): Int {
-        val count = pages.fold(0) { count, page -> count + page.elementCount() }
+        // Avoid creating an iterator.
+        // return pages.fold(0) { count, page -> count + page.elementCount() }
+        var count = 0
+        for (i in 0 until pages.size) {
+            count += pages[i].elementCount()
+        }
         return count
     }
 
     private val elementAtResult = ElementAtResult()
 
     internal fun elementAt(position: Int, doThrow: Boolean): ElementAtResult? {
+        // Avoid creating an iterator.
         var before = 0
-        for (page in pages) {
+        for (i in 0 until pages.size) {
+            val page = pages[i]
             val count = page.elementCount()
-            if (position >= before && position < before + count) {
+            if (before <= position && position < before + count) {
                 elementAtResult.page = page
                 elementAtResult.element = page.elementAt(position - before)
                 elementAtResult.positionInPage = position - before
@@ -122,8 +140,6 @@ internal class PageManager : Iterable<Page> {
     private val updates = mutableListOf<UpdateOperation>()
 
     private fun isInBatchUpdate() = updates.isNotEmpty()
-
-    internal fun isUiThread() = Thread.currentThread() == Looper.getMainLooper().thread
 
     private var debugUpdate = 0
 
@@ -255,16 +271,16 @@ internal class PageManager : Iterable<Page> {
     }
 
     internal fun notifyPageItemRangeRemoved(page: Page, from: Int, count: Int) {
-        adapter?.notifyItemRangeRemoved(countBefore(page) + from, count)
+        notifySafely { it.notifyItemRangeRemoved(countBefore(page) + from, count) }
     }
 
     internal fun notifyPageItemRangeChanged(page: Page, from: Int, count: Int, payload: Any? = null) {
-        adapter?.notifyItemRangeChanged(countBefore(page) + from, count, payload)
+        notifySafely { it.notifyItemRangeChanged(countBefore(page) + from, count, payload) }
     }
 
     internal fun notifyPageItemRangeInserted(page: Page, from: Int, count: Int) {
         val before = countBefore(page)
-        adapter?.notifyItemRangeInserted(before + from, count)
+        notifySafely { it.notifyItemRangeInserted(before + from, count) }
     }
 
     internal fun notifyPageItemInserted(page: Page, position: Int) {
@@ -281,7 +297,18 @@ internal class PageManager : Iterable<Page> {
 
     internal fun notifyPageItemMoved(page: Page, fromPosition: Int, toPosition: Int) {
         val count = countBefore(page)
-        adapter?.notifyItemMoved(count + fromPosition, count + toPosition)
+        notifySafely { it.notifyItemMoved(count + fromPosition, count + toPosition) }
+    }
+
+    private fun notifySafely(action: (Adapter) -> Unit) {
+        val adapter = adapter ?: return
+        if (adapter.canNotifySafely()) {
+            action(adapter)
+        } else {
+            uiExecutor.post {
+                notifySafely(action)
+            }
+        }
     }
 
     /**

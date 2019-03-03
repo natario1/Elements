@@ -23,7 +23,6 @@ open class LiveDataSource<T: Any>(private val data: LiveData<List<T>>, private v
     override fun getElementType(data: T) = elementType
 
     override fun areItemsTheSame(first: T, second: T): Boolean {
-        return false
+        return first == second
     }
-
 }

@@ -174,6 +174,27 @@ abstract class Source<T: Any> {
         return keys[page.number] as LiveData<K>
     }
 
+    /**
+     * Calls [getKeyLiveData] on the previous page. If [page] is the first page,
+     * returns a [LiveData] set to [firstPageValue].
+     */
+    protected fun <K: Any> getPreviousKeyLiveData(page: Page, firstPageValue: K? = null): LiveData<K> {
+        return if (page.isFirstPage()) {
+            val result = MutableLiveData<K>()
+            result.value = firstPageValue
+            result
+        } else {
+            getKeyLiveData(page.previous()!!)
+        }
+    }
+
+    internal fun closePage(page: Page): LiveData<List<Element<T>>>? {
+        if (!knowsPage(page)) return null
+        val data = map[page.number]!!
+        map.remove(page.number)
+        return data
+    }
+
     internal fun openPage(page: Page, dependencies: List<Element<*>>): LiveData<List<Element<T>>> {
         if (knowsPage(page)) throw RuntimeException("Opening an already opened page!")
         map[page.number] = ResultProvider(page)
@@ -198,6 +219,13 @@ abstract class Source<T: Any> {
      * This is never called if we have no dependencies.
      */
     public open fun onPageChanged(page: Page, dependencies: List<Element<*>>) {}
+
+    /**
+     * The [Page] was just closed, for example as a result of an [Adapter.releasePage] call.
+     * At this point, the page still contains elements, but is detached from the adapter
+     * and will soon be emptied. You are not supposed to act on the page at this point.
+     */
+    public open fun onPageClosed(page: Page) {}
 
     /**
      * Used to declare dependencies with other sources (using is / instanceof).
@@ -274,7 +302,7 @@ abstract class Source<T: Any> {
         }
     }
 
-    fun canOpenNextPage(previous: Page?): Boolean {
+    internal fun canOpenNextPage(previous: Page?): Boolean {
         val key = previous?.let { getKey<Any>(it) }
         return canOpenPage(previous, key)
     }
