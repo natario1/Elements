@@ -180,20 +180,20 @@ public abstract class Presenter<T: Any>(
      */
     public class Holder(view: View): RecyclerView.ViewHolder(view) {
 
-        private val map: MutableMap<String, Any> = mutableMapOf()
+        private val map: MutableMap<String, Any?> = mutableMapOf()
 
         /**
          * Sets an object to be held by this Holder. Might be a view,
          * or any other object you need to attach.
          */
-        public fun set(key: String, value: Any) { map[key] = value }
+        public fun set(key: String, value: Any?) { map[key] = value }
 
         /**
          * Returns an object that was previously attached to this
          * holder using [set].
          */
         @Suppress("UNCHECKED_CAST")
-        public fun <T: Any> get(key: String): T = map[key] as T
+        public fun <T> get(key: String): T = map[key] as T
 
         /**
          * Shorthand for itemViewType.

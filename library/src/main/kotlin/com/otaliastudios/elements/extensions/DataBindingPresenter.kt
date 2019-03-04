@@ -4,6 +4,9 @@ import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.ViewDataBinding
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
 import com.otaliastudios.elements.Element
 import com.otaliastudios.elements.Page
 import com.otaliastudios.elements.Presenter
@@ -23,9 +26,15 @@ abstract class DataBindingPresenter<T: Any, DB: ViewDataBinding>(
 
     final override fun onCreate(parent: ViewGroup, elementType: Int): Holder {
         val binding = onCreateBinding(parent, elementType)
-        binding.setLifecycleOwner(this) // Is this the right thing to do?
+        binding.setLifecycleOwner(this)
         val holder = Holder(binding.root)
         holder.set("binding", binding)
+        lifecycle.addObserver(object: LifecycleObserver {
+            @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+            fun onDestroy() {
+                binding.setLifecycleOwner(null)
+            }
+        })
         return holder
     }
 
