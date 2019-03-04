@@ -33,6 +33,7 @@ abstract class DataBindingPresenter<T: Any, DB: ViewDataBinding>(
             @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
             fun onDestroy() {
                 binding.setLifecycleOwner(null)
+                lifecycle.removeObserver(this)
             }
         })
         return holder

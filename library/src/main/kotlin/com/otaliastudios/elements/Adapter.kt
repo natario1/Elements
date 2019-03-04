@@ -276,6 +276,7 @@ public final class Adapter private constructor(
             it.unbind(this)
         }
         recyclerViews.clear()
+        lifecycle.removeObserver(this)
     }
 
     /**
