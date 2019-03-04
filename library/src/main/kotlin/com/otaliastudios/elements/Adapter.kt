@@ -275,6 +275,7 @@ public final class Adapter private constructor(
         sources.forEach {
             it.unbind(this)
         }
+        recyclerViews.clear()
     }
 
     /**
