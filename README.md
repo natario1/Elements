@@ -1,3 +1,7 @@
+*Need support, consulting, or have any other business-related question? Feel free to <a href="mailto:mat.iavarone@gmail.com">get in touch</a>.*
+
+*Like the project, make profit from it, or simply want to thank back? Please consider [sponsoring me](https://github.com/sponsors/natario1)!*
+
 # Elements
 
 A collection of modular elements for `RecyclerView` lists, alternative to
