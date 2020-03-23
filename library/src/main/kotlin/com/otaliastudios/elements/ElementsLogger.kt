@@ -6,6 +6,7 @@ import timber.log.Timber
 object ElementsLogger {
 
     const val VERBOSE = Log.VERBOSE
+    const val INFO = Log.INFO
     const val WARN = Log.WARN
     const val ERROR = Log.ERROR
 
@@ -20,6 +21,8 @@ object ElementsLogger {
     }
 
     fun verbose() = logs(VERBOSE)
+
+    fun infos() = logs(INFO)
 
     fun warns() = logs(WARN)
 
@@ -47,5 +50,13 @@ object ElementsLogger {
 
     internal fun v(throwable: Throwable, message: String) {
         if (verbose()) Timber.v(throwable, message)
+    }
+
+    internal fun i(message: String) {
+        if (infos()) Timber.i(message)
+    }
+
+    internal fun i(throwable: Throwable, message: String) {
+        if (infos()) Timber.i(throwable, message)
     }
 }

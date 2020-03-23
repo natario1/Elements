@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Elements Showcase</string>
+    <string name="app_name">Elements</string>
 
     <string name="menu_paged">Paged</string>
     <string name="menu_paged_on_click">Click-paged</string>
