@@ -4,7 +4,7 @@ title: "Support"
 order: 2
 ---
 
-GIFCompressor is maintained and, for the most part, developed by Mattia Iavarone ([contact me!](contact)).
+Elements is maintained and, for the most part, developed by Mattia Iavarone ([contact me!](contact)).
 If you like the project, use it with profit, or simply want to thank back, please consider
 [sponsoring me](https://github.com/sponsors/natario1) through the GitHub Sponsors program!
 
