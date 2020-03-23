@@ -19,15 +19,17 @@ A collection of modular elements for `RecyclerView` lists, alternative to
 implementation("com.otaliastudios:elements:0.3.7")
 ```
 
-- **Separation of concerns**: we split the model component into `Source`s, and the UI component into `Presenter`s.
-- **Simplicity**: No need to extend Adapters, ViewHolders or all that Paging lib. boilerplate.
-- **Reusability**: as a result, each `Source` and `Presenter` is an independent piece of code that can be reused.
-- **Modularity**: let the adapter accept multiple `Source`s and `Presenter`s.
-- **Testability**: a consequence of the above, each component can be independently tested.
-- **Coordination**: let `Source`s declare dependencies among them, in a `CoordinatorLayout.Behavior` fashion.
-- **Paging**: built-in concept of `Page`.
-- **Integration with Arch components**: heavy use of `LiveData` and `Lifecycle`s, extensions for data binding.
-- **Animations**: give `Presenters`s fine grained control over how to animate each item
+Design features:
+
+- Separation of concerns: we split the model component into `Source`s, and the UI component into `Presenter`s. [[docs]](https://natario1.github.io/Elements/docs/sources)
+- Simplicity: No need to extend Adapters, ViewHolders or all that Paging lib. boilerplate.
+- Reusability: as a result, each `Source` and `Presenter` is an independent piece of code that can be reused.
+- Modularity: let the adapter accept multiple `Source`s and `Presenter`s. [[docs]](https://natario1.github.io/Elements/docs/adapter)
+- Testability: a consequence of the above, each component can be independently tested.
+- Coordination: let `Source`s declare dependencies among them, in a `CoordinatorLayout.Behavior` fashion. [[docs]](https://natario1.github.io/Elements/docs/coordination)
+- Paging: built-in concept of `Page`. [[docs]](https://natario1.github.io/Elements/docs/pagination)
+- Integration with Arch components: heavy use of `LiveData` and `Lifecycle`s, extensions for data binding.
+- Animations: give `Presenters`s fine grained control over how to animate each item [[docs]](https://natario1.github.io/Elements/docs/animations)
 
 If you are curious about how it works in practice, take a look at the sample app in the `app` module.
 
