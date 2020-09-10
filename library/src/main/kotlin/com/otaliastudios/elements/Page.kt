@@ -61,6 +61,7 @@ import kotlin.collections.ArrayList
  */
 public class Page internal constructor(pageManager: PageManager, internal val number: Int) {
 
+    private val log = ElementsLogger("Page($number)")
     private var pageManager: PageManager? = pageManager
     private val semaphore = Semaphore(1, true)
     private var elements = arrayListOf<Element<*>>()
@@ -135,11 +136,7 @@ public class Page internal constructor(pageManager: PageManager, internal val nu
     }
 
     private fun log(event: String, message: String) {
-        ElementsLogger.v("$event, page($number), " +
-                "el(${elements.size}), " +
-                "rawEl(${rawElements.size}), " +
-                "uiThread(${isUiThread()}), " +
-                "message($message)")
+        log.v { "$event: el=${elements.size} rawEl=${rawElements.size} ui=${isUiThread()} msg=$message" }
     }
 
 

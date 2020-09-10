@@ -36,7 +36,6 @@ android {
 dependencies {
     api("androidx.recyclerview:recyclerview:1.1.0")
     api("androidx.lifecycle:lifecycle-livedata:2.2.0")
-    api("com.jakewharton.timber:timber:4.7.1")
 }
 
 publisher {

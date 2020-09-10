@@ -26,9 +26,9 @@ public abstract class DataBindingPresenter<T: Any, DB: ViewDataBinding>(
 
     final override fun onCreate(parent: ViewGroup, elementType: Int): Holder {
         val binding = onCreateBinding(parent, elementType)
-        binding.setLifecycleOwner(this)
+        binding.lifecycleOwner = this
         val holder = Holder(binding.root)
-        holder.set("binding", binding)
+        holder["binding"] = binding
         lifecycle.addObserver(object: LifecycleObserver {
             @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
             fun onDestroy() {

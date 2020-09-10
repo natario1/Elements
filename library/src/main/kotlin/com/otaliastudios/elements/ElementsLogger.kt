@@ -1,62 +1,57 @@
 package com.otaliastudios.elements
 
 import android.util.Log
-import timber.log.Timber
 
-public object ElementsLogger {
 
-    public const val VERBOSE: Int = Log.VERBOSE
-    public const val INFO: Int = Log.INFO
-    public const val WARN: Int = Log.WARN
-    public const val ERROR: Int = Log.ERROR
+/**
+ * Lazy logger used across the library.
+ * Use [setLevel] to configure the verbosity.
+ */
+public class ElementsLogger internal constructor(private val tag: String) {
 
-    private var level = ERROR
+    public companion object {
+        public const val VERBOSE: Int = Log.VERBOSE
+        public const val INFO: Int = Log.INFO
+        public const val WARN: Int = Log.WARN
+        public const val ERROR: Int = Log.ERROR
 
-    public fun setLevel(level: Int) {
-        this.level = level
+        private var level = WARN
+
+        @JvmStatic
+        public fun setLevel(level: Int) {
+            this.level = level
+        }
     }
 
-    public fun logs(level: Int): Boolean {
-        return this.level <= level
+    internal fun w(message: () -> String) {
+        if (level <= WARN) Log.w(tag, message())
     }
 
-    public fun verbose(): Boolean = logs(VERBOSE)
-
-    public fun infos(): Boolean = logs(INFO)
-
-    public fun warns(): Boolean = logs(WARN)
-
-    public fun errors(): Boolean = logs(ERROR)
-
-    internal fun w(message: String) {
-        if (warns()) Timber.w(message)
+    internal fun w(throwable: Throwable, message: () -> String) {
+        if (level <= WARN) Log.w(tag, message(), throwable)
     }
 
-    internal fun w(throwable: Throwable, message: String) {
-        if (warns()) Timber.w(throwable, message)
+    internal fun e(message: () -> String) {
+        if (level <= ERROR) Log.e(tag, message())
     }
 
-    internal fun e(message: String) {
-        if (errors()) Timber.e(message)
+    internal fun e(throwable: Throwable, message: () -> String) {
+        if (level <= ERROR) Log.e(tag, message(), throwable)
     }
 
-    internal fun e(throwable: Throwable, message: String) {
-        if (errors()) Timber.e(throwable, message)
+    internal fun i(message: () -> String) {
+        if (level <= INFO) Log.i(tag, message())
     }
 
-    internal fun v(message: String) {
-        if (verbose()) Timber.v(message)
+    internal fun i(throwable: Throwable, message: () -> String) {
+        if (level <= INFO) Log.i(tag, message(), throwable)
     }
 
-    internal fun v(throwable: Throwable, message: String) {
-        if (verbose()) Timber.v(throwable, message)
+    internal fun v(message: () -> String) {
+        if (level <= VERBOSE) Log.v(tag, message())
     }
 
-    internal fun i(message: String) {
-        if (infos()) Timber.i(message)
-    }
-
-    internal fun i(throwable: Throwable, message: String) {
-        if (infos()) Timber.i(throwable, message)
+    internal fun v(throwable: Throwable, message: () -> String) {
+        if (level <= VERBOSE) Log.v(tag, message(), throwable)
     }
 }

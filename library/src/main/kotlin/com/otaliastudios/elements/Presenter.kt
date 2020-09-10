@@ -187,14 +187,14 @@ public abstract class Presenter<T: Any>(
          * Sets an object to be held by this Holder. Might be a view,
          * or any other object you need to attach.
          */
-        public fun set(key: String, value: Any?) { map[key] = value }
+        public operator fun set(key: String, value: Any?) { map[key] = value }
 
         /**
          * Returns an object that was previously attached to this
          * holder using [set].
          */
         @Suppress("UNCHECKED_CAST")
-        public fun <T> get(key: String): T = map[key] as T
+        public operator fun <T> get(key: String): T = map[key] as T
 
         /**
          * Shorthand for itemViewType.

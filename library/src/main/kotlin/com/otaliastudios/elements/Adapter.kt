@@ -138,6 +138,7 @@ public final class Adapter private constructor(
      */
     override fun getLifecycle(): Lifecycle = lifecycleOwner.lifecycle
 
+    private val log = ElementsLogger("Adapter")
     private val autoScrollListeners = mutableSetOf<AutoScrollListener>()
     private val recyclerViews = mutableSetOf<RecyclerView>()
     private val typeMap: SparseArray<Presenter<*>> = SparseArray()
@@ -376,9 +377,7 @@ public final class Adapter private constructor(
      * In the future we want to just do a no-op.
      */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Presenter.Holder {
-        if (ElementsLogger.verbose()) {
-            ElementsLogger.v("onCreateViewHolder, type: $viewType")
-        }
+        log.v { "onCreateViewHolder, type: $viewType" }
         return presenterForType(viewType).createHolder(parent, viewType)
     }
 
@@ -394,13 +393,13 @@ public final class Adapter private constructor(
         val query = pageManager.elementAt(position, true)!!
         val page = query.page
         val element = query.element as Element<Any>
-        if (ElementsLogger.verbose()) {
-            ElementsLogger.v("onBindViewHolder, type: ${holder.itemViewType}, " +
+        log.v {
+            "onBindViewHolder, type: ${holder.itemViewType}, " +
                     "elementType: ${element.type}, " +
                     "position: $position, " +
                     "presenter: ${presenter.javaClass.simpleName}, " +
                     "data: ${element.data?.javaClass?.simpleName}, " +
-                    "source: ${element.source.javaClass.simpleName}")
+                    "source: ${element.source.javaClass.simpleName}"
         }
         if (element.type != holder.itemViewType) {
             throw RuntimeException("Something is wrong here...")
@@ -432,7 +431,7 @@ public final class Adapter private constructor(
             onPageCreated(page)
             return true
         } else {
-            ElementsLogger.w("requestPage was blocked by one of the sources. Current page: $current ${current?.number}")
+            log.w { "requestPage was blocked by one of the sources. Current page: $current ${current?.number}" }
             return false
         }
     }
