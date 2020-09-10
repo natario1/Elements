@@ -13,7 +13,7 @@ Companies can share a tiny part of their revenue and get private support hours i
 
 - Refreshed dependencies, Kotlin 1.4.0 [#10][10] 
 
-<https://github.com/natario1/Egloo/compare/v0.3.7...v0.4.0>
+<https://github.com/natario1/Elements/compare/v0.3.7...v0.4.0>
 
 #### v0.3.7
 
