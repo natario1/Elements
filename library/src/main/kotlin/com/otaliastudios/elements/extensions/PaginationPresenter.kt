@@ -16,7 +16,7 @@ import com.otaliastudios.elements.Presenter
 public open class PaginationPresenter(
         context: Context,
         private val layout: Int
-) : Presenter<Void>(context) {
+) : Presenter<Unit>(context) {
 
     override val elementTypes: List<Int> = listOf(PaginationSource.ELEMENT_TYPE)
 

@@ -225,7 +225,7 @@ public abstract class Presenter<T: Any>(
                 context: Context,
                 layoutRes: Int,
                 bind: ((View, Exception) -> Unit)? = null
-        ): Presenter<Void> = ErrorPresenter(context, layoutRes, bind)
+        ): Presenter<Unit> = ErrorPresenter(context, layoutRes, bind)
 
         /**
          * Creates a [EmptyPresenter] with Kotlin-friendly syntax,
@@ -234,7 +234,7 @@ public abstract class Presenter<T: Any>(
         public fun forEmptyIndicator(
                 context: Context,
                 layoutRes: Int
-        ): Presenter<Void> = EmptyPresenter(context, layoutRes)
+        ): Presenter<Unit> = EmptyPresenter(context, layoutRes)
 
         /**
          * Creates a [LoadingPresenter] with Kotlin-friendly syntax,
@@ -244,7 +244,7 @@ public abstract class Presenter<T: Any>(
                 context: Context,
                 layoutRes: Int,
                 bind: ((View) -> Unit)? = null
-        ): Presenter<Void> = LoadingPresenter(context, layoutRes, bind)
+        ): Presenter<Unit> = LoadingPresenter(context, layoutRes, bind)
 
         /**
          * Creates a [PaginationPresenter] with Kotlin-friendly syntax,
@@ -253,7 +253,7 @@ public abstract class Presenter<T: Any>(
         public fun forPagination(
                 context: Context,
                 layoutRes: Int
-        ): Presenter<Void> = PaginationPresenter(context, layoutRes)
+        ): Presenter<Unit> = PaginationPresenter(context, layoutRes)
 
         /**
          * Creates a [DividerPresenter] to display dividers.
@@ -261,7 +261,7 @@ public abstract class Presenter<T: Any>(
         public fun forDividers(
                 context: Context,
                 layoutRes: Int
-        ): Presenter<Void> = DividerPresenter(context, layoutRes)
+        ): Presenter<Unit> = DividerPresenter(context, layoutRes)
 
         /**
          * Creates a [DataBindingPresenter] with Kotlin-friendly syntax,

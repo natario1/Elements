@@ -17,7 +17,7 @@ import com.otaliastudios.elements.Presenter
 public open class DividerPresenter(
         context: Context,
         private val layout: Int
-) : Presenter<Void>(context) {
+) : Presenter<Unit>(context) {
 
     override val elementTypes: List<Int> = listOf(DividerSource.ELEMENT_TYPE)
 

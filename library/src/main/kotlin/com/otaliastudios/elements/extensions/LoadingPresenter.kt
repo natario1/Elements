@@ -21,7 +21,7 @@ public open class LoadingPresenter(
         context: Context,
         private val layout: Int,
         private val bind: ((View) -> Unit)? = null
-) : Presenter<Void>(context) {
+) : Presenter<Unit>(context) {
 
     override val elementTypes: List<Int> = listOf(MainSource.ELEMENT_TYPE_LOADING)
 
@@ -29,7 +29,7 @@ public open class LoadingPresenter(
         return Holder(getLayoutInflater().inflate(layout, parent, false))
     }
 
-    override fun onBind(page: Page, holder: Holder, element: Element<Void>) {
+    override fun onBind(page: Page, holder: Holder, element: Element<Unit>) {
         super.onBind(page, holder, element)
         bind?.invoke(holder.itemView)
     }

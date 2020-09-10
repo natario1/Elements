@@ -15,7 +15,7 @@ import com.otaliastudios.elements.Presenter
 public open class EmptyPresenter(
         context: Context,
         private val layout: Int
-) : Presenter<Void>(context) {
+) : Presenter<Unit>(context) {
 
     override val elementTypes: List<Int> = listOf(MainSource.ELEMENT_TYPE_EMPTY)
 
