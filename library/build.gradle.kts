@@ -14,7 +14,7 @@ android {
     defaultConfig {
         setMinSdkVersion(property("minSdkVersion") as Int)
         setTargetSdkVersion(property("targetSdkVersion") as Int)
-        versionName = "0.3.7"
+        versionName = "0.4.0"
     }
 
     sourceSets {
