@@ -3,7 +3,6 @@ buildscript {
     extra["minSdkVersion"] = 14
     extra["compileSdkVersion"] = 29
     extra["targetSdkVersion"] = 29
-    extra["kotlinVersion"] = "1.3.61"
 
     repositories {
         mavenCentral()
@@ -12,10 +11,9 @@ buildscript {
     }
 
     dependencies {
-        val kotlinVersion = property("kotlinVersion") as String
-        classpath("com.android.tools.build:gradle:3.6.1")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
-        classpath("com.otaliastudios.tools:publisher:0.1.5")
+        classpath("com.android.tools.build:gradle:4.0.1")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.0")
+        classpath("com.otaliastudios.tools:publisher:0.3.3")
     }
 }
 

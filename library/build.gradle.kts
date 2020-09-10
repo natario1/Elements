@@ -1,11 +1,11 @@
-import com.otaliastudios.tools.publisher.PublisherExtension.License
-import com.otaliastudios.tools.publisher.PublisherExtension.Release
+import com.otaliastudios.tools.publisher.common.License
+import com.otaliastudios.tools.publisher.common.Release
 
 plugins {
     id("com.android.library")
     id("kotlin-android")
     id("kotlin-android-extensions")
-    id("maven-publisher-bintray")
+    id("com.otaliastudios.tools.publisher")
 }
 
 android {
@@ -22,21 +22,24 @@ android {
         get("test").java.srcDirs("src/test/kotlin")
     }
 
-    dataBinding.isEnabled = true
+    buildFeatures {
+        dataBinding = true
+    }
+
+    kotlinOptions {
+        // Until the explicitApi() works in the Kotlin block...
+        // https://youtrack.jetbrains.com/issue/KT-37652
+        freeCompilerArgs += listOf("-Xexplicit-api=strict")
+    }
 }
 
 dependencies {
-    val kotlinVersion = property("kotlinVersion") as String
-    api("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion")
     api("androidx.recyclerview:recyclerview:1.1.0")
     api("androidx.lifecycle:lifecycle-livedata:2.2.0")
     api("com.jakewharton.timber:timber:4.7.1")
 }
 
 publisher {
-    auth.user = "BINTRAY_USER"
-    auth.key = "BINTRAY_KEY"
-    auth.repo = "BINTRAY_REPO"
     project.artifact = "elements"
     project.description = "A modular approach to RecyclerView adapters with reusable, testable, independent, coordinated components."
     project.group = "com.otaliastudios"
@@ -44,6 +47,14 @@ publisher {
     project.addLicense(License.APACHE_2_0)
     release.setSources(Release.SOURCES_AUTO)
     release.setDocs(Release.DOCS_AUTO)
+    bintray {
+        auth.user = "BINTRAY_USER"
+        auth.key = "BINTRAY_KEY"
+        auth.repo = "BINTRAY_REPO"
+    }
+    directory {
+        directory = "build/maven"
+    }
 }
 
 
