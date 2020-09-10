@@ -18,7 +18,7 @@ import com.otaliastudios.elements.Source
  * @param Anchor the type for the dependency list
  * @param Footer the type for the footer list (most frequently, a String or Date)
  */
-abstract class FooterSource<Anchor: Any, Footer: Any> : Source<FooterSource.Data<Anchor, Footer>>() {
+public abstract class FooterSource<Anchor: Any, Footer: Any> : Source<FooterSource.Data<Anchor, Footer>>() {
 
     /**
      * A [Data] object will be passed to presenters to have access to both the anchor
@@ -48,7 +48,7 @@ abstract class FooterSource<Anchor: Any, Footer: Any> : Source<FooterSource.Data
         return if (results.any { it.data?.anchor == input }) 1 else 0
     }
 
-    override fun getElementType(data: Data<Anchor, Footer>) = ELEMENT_TYPE
+    override fun getElementType(data: Data<Anchor, Footer>): Int = ELEMENT_TYPE
 
     /**
      * Implement to extract footers and anchors from the list of dependency data.
@@ -57,12 +57,12 @@ abstract class FooterSource<Anchor: Any, Footer: Any> : Source<FooterSource.Data
      */
     protected abstract fun computeFooters(page: Page, list: List<Anchor>): List<Data<Anchor, Footer>>
 
-    companion object {
+    public companion object {
 
         /**
          * The element type used by this source.
          * Can be changed by overriding [getElementType].
          */
-        public const val ELEMENT_TYPE = 127831783
+        public const val ELEMENT_TYPE: Int = 127831783
     }
 }

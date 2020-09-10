@@ -95,13 +95,13 @@ public final class Adapter private constructor(
         }
     }
 
-    companion object {
+    public companion object {
 
         /**
          * Constant for [Builder.autoScrollMode].
          * This means that no autoscroll will be performed.
          */
-        const val AUTOSCROLL_OFF = 0
+        public const val AUTOSCROLL_OFF: Int = 0
 
         /**
          * Constant for [Builder.autoScrollMode].
@@ -109,7 +109,7 @@ public final class Adapter private constructor(
          * the adapter will automatically scroll any attached RecyclerView
          * to position 0 so that new items are visible.
          */
-        const val AUTOSCROLL_POSITION_0 = 1
+        public const val AUTOSCROLL_POSITION_0: Int = 1
 
         /**
          * Constant for [Builder.autoScrollMode].
@@ -117,13 +117,16 @@ public final class Adapter private constructor(
          * the adapter will automatically scroll any attached RecyclerView
          * to that position so that new items are visible.
          */
-        const val AUTOSCROLL_POSITION_ANY = 2
+        public const val AUTOSCROLL_POSITION_ANY: Int = 2
 
         /**
          * Shorthand for creating a [Builder] for the given
          * lifecycle owner and page hint.
          */
-        fun builder(lifecycleOwner: LifecycleOwner, pageSizeHint: Int = Int.MAX_VALUE) = Builder(lifecycleOwner, pageSizeHint)
+        public fun builder(
+                lifecycleOwner: LifecycleOwner,
+                pageSizeHint: Int = Int.MAX_VALUE
+        ): Builder = Builder(lifecycleOwner, pageSizeHint)
 
         private val TAG = Adapter::class.java.simpleName
     }
@@ -133,7 +136,7 @@ public final class Adapter private constructor(
      * any reference while it observes sources and page state.
      * This is the same [Lifecycle] object that was passed to the builder.
      */
-    override fun getLifecycle() = lifecycleOwner.lifecycle
+    override fun getLifecycle(): Lifecycle = lifecycleOwner.lifecycle
 
     private val autoScrollListeners = mutableSetOf<AutoScrollListener>()
     private val recyclerViews = mutableSetOf<RecyclerView>()
@@ -347,7 +350,7 @@ public final class Adapter private constructor(
      * Returns the current item count, not considering any
      * transaction that is being computed.
      */
-    override fun getItemCount() = pageManager.elementCount()
+    override fun getItemCount(): Int = pageManager.elementCount()
 
     /**
      * Returns the element type for the given position,
@@ -515,7 +518,7 @@ public final class Adapter private constructor(
         /**
          * Auto scroll is being performed.
          */
-        fun onAutoScroll(adapter: Adapter, recycler: RecyclerView, position: Int)
+        public fun onAutoScroll(adapter: Adapter, recycler: RecyclerView, position: Int)
     }
 
     /**

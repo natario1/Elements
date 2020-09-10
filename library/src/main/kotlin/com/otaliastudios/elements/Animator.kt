@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.SimpleItemAnimator
 
 public class Animator(private val adapter: Adapter) : SimpleItemAnimator() {
     
-    companion object {
+    private companion object {
         private val defaultInterpolator: TimeInterpolator by lazy { ValueAnimator().interpolator }
     }
 

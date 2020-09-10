@@ -16,14 +16,14 @@ import com.otaliastudios.elements.Presenter
  *
  * See also [Presenter.simple].
  */
-open class SimplePresenter<T: Any>(
+public open class SimplePresenter<T: Any>(
         context: Context,
         private val layout: Int,
         private val elementType: Int,
         private val bind: ((View, T) -> Unit)?
 ) : Presenter<T>(context) {
 
-    override val elementTypes = listOf(elementType)
+    override val elementTypes: List<Int> = listOf(elementType)
 
     override fun onCreate(parent: ViewGroup, elementType: Int): Holder {
         return Holder(getLayoutInflater().inflate(layout, parent, false))

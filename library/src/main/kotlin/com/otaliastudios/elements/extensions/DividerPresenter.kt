@@ -14,12 +14,12 @@ import com.otaliastudios.elements.Presenter
  * A [DividerPresenter] deals with [DividerSource.ELEMENT_TYPE] elements that are
  * provided by a [DividerSource].
  */
-open class DividerPresenter(
+public open class DividerPresenter(
         context: Context,
         private val layout: Int
 ) : Presenter<Void>(context) {
 
-    override val elementTypes = listOf(DividerSource.ELEMENT_TYPE)
+    override val elementTypes: List<Int> = listOf(DividerSource.ELEMENT_TYPE)
 
     override fun onCreate(parent: ViewGroup, elementType: Int): Holder {
         return Holder(getLayoutInflater().inflate(layout, parent, false))

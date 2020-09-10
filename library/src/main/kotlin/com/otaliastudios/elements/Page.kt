@@ -75,7 +75,7 @@ public class Page internal constructor(pageManager: PageManager, internal val nu
     /**
      * The current size, not considering any pending update.
      */
-    public fun elementCount() = elements.size
+    public fun elementCount(): Int = elements.size
 
     internal fun elementAt(position: Int) = elements[position]
 
@@ -95,13 +95,13 @@ public class Page internal constructor(pageManager: PageManager, internal val nu
      * Returns true if this is the first page,
      * false otherwise.
      */
-    public fun isFirstPage() = previous() == null
+    public fun isFirstPage(): Boolean = previous() == null
 
     /**
      * Returns true if this is the last page,
      * false otherwise.
      */
-    public fun isLastPage() = next() == null
+    public fun isLastPage(): Boolean = next() == null
 
 
     internal fun isInUpdate() = semaphore.availablePermits() == 0
@@ -262,7 +262,7 @@ public class Page internal constructor(pageManager: PageManager, internal val nu
      * actually block the UI thread.
      */
     @UiThread // API
-    fun replaceElement(element: Element<*>, replacement: Element<*>) {
+    public fun replaceElement(element: Element<*>, replacement: Element<*>) {
         executePageApi {
             val message = "replaceElement $element with $replacement"
             val list = startUpdate(message)
@@ -285,7 +285,7 @@ public class Page internal constructor(pageManager: PageManager, internal val nu
      * actually block the UI thread.
      */
     @UiThread // API
-    fun insertElements(position: Int, elements: Collection<Element<*>>) {
+    public fun insertElements(position: Int, elements: Collection<Element<*>>) {
         executePageApi {
             val message = "insertElements position $position size ${elements.size}"
             val list = startUpdate(message)
@@ -307,7 +307,7 @@ public class Page internal constructor(pageManager: PageManager, internal val nu
      * actually block the UI thread.
      */
     @UiThread // API
-    fun replaceElements(position: Int, vararg elements: Element<*>) {
+    public fun replaceElements(position: Int, vararg elements: Element<*>) {
         executePageApi {
             val message = "replaceElements position $position size ${elements.size}"
             val list = startUpdate(message)
@@ -334,7 +334,7 @@ public class Page internal constructor(pageManager: PageManager, internal val nu
      * actually block the UI thread.
      */
     @UiThread // API
-    fun removeElements(position: Int, count: Int) {
+    public fun removeElements(position: Int, count: Int) {
         executePageApi {
             val message = "removeElements position $position count $count"
             val list = startUpdate(message)
@@ -360,7 +360,7 @@ public class Page internal constructor(pageManager: PageManager, internal val nu
      * actually block the UI thread.
      */
     @UiThread // API
-    fun notifyItemChanged(position: Int) {
+    public fun notifyItemChanged(position: Int) {
         executePageApi {
             val message = "notifyItemChanged position $position"
             val list = startUpdate(message)
@@ -381,7 +381,7 @@ public class Page internal constructor(pageManager: PageManager, internal val nu
      * actually block the UI thread.
      */
     @UiThread // API
-    fun notifyItemChanged(element: Element<*>) {
+    public fun notifyItemChanged(element: Element<*>) {
         executePageApi {
             val message = "notifyItemChanged element $element"
             val list = startUpdate(message)

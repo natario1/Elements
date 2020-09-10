@@ -1,16 +1,49 @@
+@file:Suppress("unused")
+
 package com.otaliastudios.elements.pagers
 
 import com.otaliastudios.elements.*
 import com.otaliastudios.elements.extensions.MainSource
 
-open class SourceResultsPager(
-        val fraction: Float = 0.8F,
-        val selector: (source: Source<*>, elementType: Int) -> Boolean = { source, elementType ->
+public open class NoPagesPager: Pager() {
+    override fun onElementBound(
+            page: Page,
+            element: Element<*>,
+            presenter: Presenter<*>,
+            absolutePosition: Int,
+            pagePosition: Int
+    ): Unit = Unit
+}
+
+public open class PageFractionPager(
+        expectedPageSize: Int,
+        fraction: Float
+): PageSizePager((expectedPageSize * fraction).toInt())
+
+public open class PageSizePager(private val pageSize: Int): Pager() {
+
+    override fun onElementBound(
+            page: Page,
+            element: Element<*>,
+            presenter: Presenter<*>,
+            absolutePosition: Int,
+            pagePosition: Int
+    ) {
+        if (pagePosition == maxOf(pageSize - 1, 0) && page.isLastPage()) {
+            requestPage()
+        }
+    }
+}
+
+public open class SourceResultsPager(
+        private val fraction: Float = 0.8F,
+        private val selector: (source: Source<*>, elementType: Int) -> Boolean = { source, elementType ->
             source is MainSource
                     && elementType != MainSource.ELEMENT_TYPE_LOADING
                     && elementType != MainSource.ELEMENT_TYPE_EMPTY
                     && elementType != MainSource.ELEMENT_TYPE_ERROR
-        }): Pager() {
+        }
+): Pager() {
 
     override fun onElementBound(page: Page, element: Element<*>, presenter: Presenter<*>, absolutePosition: Int, pagePosition: Int) {
         val source = element.source

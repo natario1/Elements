@@ -19,7 +19,7 @@ import com.otaliastudios.elements.Presenter
  * @property context an activity context
  * @property onElementClick a click listener
  */
-abstract class DataBindingPresenter<T: Any, DB: ViewDataBinding>(
+public abstract class DataBindingPresenter<T: Any, DB: ViewDataBinding>(
         context: Context,
         onElementClick: ((Page, Holder, Element<T>) -> Unit)? = null
 ) : Presenter<T>(context, onElementClick) {

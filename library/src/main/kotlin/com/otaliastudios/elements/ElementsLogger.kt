@@ -3,30 +3,30 @@ package com.otaliastudios.elements
 import android.util.Log
 import timber.log.Timber
 
-object ElementsLogger {
+public object ElementsLogger {
 
-    const val VERBOSE = Log.VERBOSE
-    const val INFO = Log.INFO
-    const val WARN = Log.WARN
-    const val ERROR = Log.ERROR
+    public const val VERBOSE: Int = Log.VERBOSE
+    public const val INFO: Int = Log.INFO
+    public const val WARN: Int = Log.WARN
+    public const val ERROR: Int = Log.ERROR
 
     private var level = ERROR
 
-    fun setLevel(level: Int) {
+    public fun setLevel(level: Int) {
         this.level = level
     }
 
-    fun logs(level: Int): Boolean {
+    public fun logs(level: Int): Boolean {
         return this.level <= level
     }
 
-    fun verbose() = logs(VERBOSE)
+    public fun verbose(): Boolean = logs(VERBOSE)
 
-    fun infos() = logs(INFO)
+    public fun infos(): Boolean = logs(INFO)
 
-    fun warns() = logs(WARN)
+    public fun warns(): Boolean = logs(WARN)
 
-    fun errors() = logs(ERROR)
+    public fun errors(): Boolean = logs(ERROR)
 
     internal fun w(message: String) {
         if (warns()) Timber.w(message)

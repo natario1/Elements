@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewPropertyAnimator
 import androidx.databinding.ViewDataBinding
+import androidx.lifecycle.Lifecycle
 import com.otaliastudios.elements.extensions.*
 
 /**
@@ -35,14 +36,14 @@ public abstract class Presenter<T: Any>(
      * Each [Presenter] implements the [LifecycleOwner] interface,
      * although this was not needed until now.
      */
-    override fun getLifecycle() = owner.lifecycle
+    override fun getLifecycle(): Lifecycle = owner.lifecycle
 
     /**
      * Returns the adapter that this presenter was bound to.
      * For this reason, you shouldn't bind a presenter to more than
      * one adapter.
      */
-    protected fun getAdapter() = adapter
+    protected fun getAdapter(): Adapter = adapter
 
     /**
      * Returns a legit layout inflater to be used when
@@ -202,48 +203,76 @@ public abstract class Presenter<T: Any>(
 
     }
 
-    companion object {
+    @Suppress("unused")
+    public companion object {
 
         /**
          * Creates a [SimplePresenter] with Kotlin-friendly syntax,
          * and restricted functionality. Extend the class for more freedom.
          */
-        fun <T: Any> simple(context: Context, layoutRes: Int, elementType: Int, bind: ((View, T) -> Unit)? = null) = SimplePresenter(context, layoutRes, elementType, bind)
+        public fun <T: Any> simple(
+                context: Context,
+                layoutRes: Int,
+                elementType: Int,
+                bind: ((View, T) -> Unit)? = null
+        ): Presenter<T> = SimplePresenter(context, layoutRes, elementType, bind)
 
         /**
          * Creates a [ErrorPresenter] with Kotlin-friendly syntax,
          * and restricted functionality. Extend the class for more freedom.
          */
-        fun forErrorIndicator(context: Context, layoutRes: Int, bind: ((View, Exception) -> Unit)? = null) = ErrorPresenter(context, layoutRes, bind)
+        public fun forErrorIndicator(
+                context: Context,
+                layoutRes: Int,
+                bind: ((View, Exception) -> Unit)? = null
+        ): Presenter<Void> = ErrorPresenter(context, layoutRes, bind)
 
         /**
          * Creates a [EmptyPresenter] with Kotlin-friendly syntax,
          * and restricted functionality. Extend the class for more freedom.
          */
-        fun forEmptyIndicator(context: Context, layoutRes: Int) = EmptyPresenter(context, layoutRes)
+        public fun forEmptyIndicator(
+                context: Context,
+                layoutRes: Int
+        ): Presenter<Void> = EmptyPresenter(context, layoutRes)
 
         /**
          * Creates a [LoadingPresenter] with Kotlin-friendly syntax,
          * and restricted functionality. Extend the class for more freedom.
          */
-        fun forLoadingIndicator(context: Context, layoutRes: Int, bind: ((View) -> Unit)? = null) = LoadingPresenter(context, layoutRes, bind)
+        public fun forLoadingIndicator(
+                context: Context,
+                layoutRes: Int,
+                bind: ((View) -> Unit)? = null
+        ): Presenter<Void> = LoadingPresenter(context, layoutRes, bind)
 
         /**
          * Creates a [PaginationPresenter] with Kotlin-friendly syntax,
          * and restricted functionality. Extend the class for more freedom.
          */
-        fun forPagination(context: Context, layoutRes: Int) = PaginationPresenter(context, layoutRes)
+        public fun forPagination(
+                context: Context,
+                layoutRes: Int
+        ): Presenter<Void> = PaginationPresenter(context, layoutRes)
 
         /**
          * Creates a [DividerPresenter] to display dividers.
          */
-        fun forDividers(context: Context, layoutRes: Int) = DividerPresenter(context, layoutRes)
+        public fun forDividers(
+                context: Context,
+                layoutRes: Int
+        ): Presenter<Void> = DividerPresenter(context, layoutRes)
 
         /**
          * Creates a [DataBindingPresenter] with Kotlin-friendly syntax,
          * and restricted functionality. Extend the class for more freedom.
          */
-        fun <T: Any, D: ViewDataBinding> withDataBinding(context: Context, elementType: Int, factory: (LayoutInflater, ViewGroup) -> D, bind: (D, T) -> Unit) = object : DataBindingPresenter<T, D>(context) {
+        public fun <T: Any, D: ViewDataBinding> withDataBinding(
+                context: Context,
+                elementType: Int,
+                factory: (LayoutInflater, ViewGroup) -> D,
+                bind: (D, T) -> Unit
+        ): Presenter<T> = object : DataBindingPresenter<T, D>(context) {
 
             override val elementTypes = listOf(elementType)
 
