@@ -16,7 +16,6 @@ import com.otaliastudios.elements.sample.presenters.BottomPresenter
 import com.otaliastudios.elements.sample.presenters.PlaygroundPresenter
 import com.otaliastudios.elements.sample.presenters.TopMessagePresenter
 import com.otaliastudios.elements.sample.sources.*
-import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
 
@@ -24,7 +23,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
         ElementsLogger.setLevel(ElementsLogger.VERBOSE)
-        Timber.plant(Timber.DebugTree())
         val recycler = findViewById<RecyclerView>(R.id.recycler)
         val list = listOf(
                 R.string.menu_paged, R.string.menu_paged_on_click,
