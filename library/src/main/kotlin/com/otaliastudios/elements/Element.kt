@@ -24,7 +24,7 @@ public class Element<T: Any> internal constructor(
      * Creates a new element with same characteristics,
      * but replaces its data.
      */
-    fun clone(newData: T?): Element<T> {
+    public fun clone(newData: T?): Element<T> {
         return Element(source, type, newData, extra)
     }
 }

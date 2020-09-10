@@ -11,21 +11,21 @@ import com.otaliastudios.elements.Source
  * This is meant to be used with unbound adapters in conjunction with [PaginationPresenter].
  * The provided element should be rendered as a 'Load more...' button.
  */
-class PaginationSource(private val dependsOn: ((Source<*>) -> Boolean) = { true }) : Source<Any>() {
+public class PaginationSource(private val dependsOn: ((Source<*>) -> Boolean) = { true }) : Source<Any>() {
 
-    companion object {
+    public companion object {
 
         /**
          * The type for the element that we provide.
          */
-        const val ELEMENT_TYPE = 1933811
+        public const val ELEMENT_TYPE: Int = 1933811
     }
 
     override fun dependsOn(source: Source<*>): Boolean {
         return dependsOn.invoke(source)
     }
 
-    override fun getElementType(data: Any) = ELEMENT_TYPE
+    override fun getElementType(data: Any): Int = ELEMENT_TYPE
 
     override fun areItemsTheSame(first: Any, second: Any): Boolean {
         return first == second

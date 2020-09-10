@@ -19,16 +19,16 @@ import com.otaliastudios.elements.Presenter
  * @property context an activity context
  * @property onElementClick a click listener
  */
-abstract class DataBindingPresenter<T: Any, DB: ViewDataBinding>(
+public abstract class DataBindingPresenter<T: Any, DB: ViewDataBinding>(
         context: Context,
         onElementClick: ((Page, Holder, Element<T>) -> Unit)? = null
 ) : Presenter<T>(context, onElementClick) {
 
     final override fun onCreate(parent: ViewGroup, elementType: Int): Holder {
         val binding = onCreateBinding(parent, elementType)
-        binding.setLifecycleOwner(this)
+        binding.lifecycleOwner = this
         val holder = Holder(binding.root)
-        holder.set("binding", binding)
+        holder["binding"] = binding
         lifecycle.addObserver(object: LifecycleObserver {
             @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
             fun onDestroy() {

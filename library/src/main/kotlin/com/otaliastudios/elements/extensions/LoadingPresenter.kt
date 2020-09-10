@@ -17,19 +17,19 @@ import com.otaliastudios.elements.Presenter
  * @property layout the layout resource to be inflated.
  * @property bind what to do when binding the loading view.
  */
-open class LoadingPresenter(
+public open class LoadingPresenter(
         context: Context,
         private val layout: Int,
         private val bind: ((View) -> Unit)? = null
-) : Presenter<Void>(context) {
+) : Presenter<Unit>(context) {
 
-    override val elementTypes = listOf(MainSource.ELEMENT_TYPE_LOADING)
+    override val elementTypes: List<Int> = listOf(MainSource.ELEMENT_TYPE_LOADING)
 
     override fun onCreate(parent: ViewGroup, elementType: Int): Holder {
         return Holder(getLayoutInflater().inflate(layout, parent, false))
     }
 
-    override fun onBind(page: Page, holder: Holder, element: Element<Void>) {
+    override fun onBind(page: Page, holder: Holder, element: Element<Unit>) {
         super.onBind(page, holder, element)
         bind?.invoke(holder.itemView)
     }

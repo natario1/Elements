@@ -12,12 +12,12 @@ import com.otaliastudios.elements.Presenter
  *
  * @property layout the layout resource to be inflated.
  */
-open class EmptyPresenter(
+public open class EmptyPresenter(
         context: Context,
         private val layout: Int
-) : Presenter<Void>(context) {
+) : Presenter<Unit>(context) {
 
-    override val elementTypes = listOf(MainSource.ELEMENT_TYPE_EMPTY)
+    override val elementTypes: List<Int> = listOf(MainSource.ELEMENT_TYPE_EMPTY)
 
     override fun onCreate(parent: ViewGroup, elementType: Int): Holder {
         return Holder(getLayoutInflater().inflate(layout, parent, false))

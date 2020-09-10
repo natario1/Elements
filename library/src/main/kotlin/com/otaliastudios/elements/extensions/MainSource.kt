@@ -19,30 +19,30 @@ import com.otaliastudios.elements.Source
  * @property errorIndicatorEnabled whether we should emit an error indicator when the source posts an error
  * @property emptyIndicatorEnabled whether we should emit an empty indicator when the source posts an empty list
  */
-abstract class MainSource<T: Any>(
+public abstract class MainSource<T: Any>(
         protected var loadingIndicatorsEnabled: Boolean = true,
         protected var errorIndicatorEnabled: Boolean = true,
         protected var emptyIndicatorEnabled: Boolean = true
 ) : Source<T>() {
 
-    companion object {
+    public companion object {
         /**
          * Constant for the loading element that is provided during
          * data fetching.
          */
-        const val ELEMENT_TYPE_LOADING = 1936817
+        public const val ELEMENT_TYPE_LOADING: Int = 1936817
 
         /**
          * Constant for the empty element that is provided when the
          * list for the first page was empty.
          */
-        const val ELEMENT_TYPE_EMPTY = 1936818
+        public const val ELEMENT_TYPE_EMPTY: Int = 1936818
 
         /**
          * Constant for the error element that is provided when the
          * list for the first page gave an Exception.
          */
-        const val ELEMENT_TYPE_ERROR = 1936819
+        public const val ELEMENT_TYPE_ERROR: Int = 1936819
     }
 
     @CallSuper

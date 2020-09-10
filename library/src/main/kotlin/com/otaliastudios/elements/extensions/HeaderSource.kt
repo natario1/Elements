@@ -19,7 +19,7 @@ import com.otaliastudios.elements.extensions.FooterSource.Data
  * @param Anchor the type for the dependency list
  * @param Header the type for the header list (most frequently, a String or Date)
  */
-abstract class HeaderSource<Anchor: Any, Header: Any>() : Source<HeaderSource.Data<Anchor, Header>>() {
+public abstract class HeaderSource<Anchor: Any, Header: Any>() : Source<HeaderSource.Data<Anchor, Header>>() {
 
     /**
      * A [Data] object will be passed to presenters to have access to both the anchor
@@ -28,7 +28,7 @@ abstract class HeaderSource<Anchor: Any, Header: Any>() : Source<HeaderSource.Da
      * @property anchor the anchor data as computed by [computeHeaders]
      * @property header the header data extracted from the anchors
      */
-    data class Data<Anchor: Any, Header: Any>(val anchor: Anchor, val header: Header)
+    public data class Data<Anchor: Any, Header: Any>(val anchor: Anchor, val header: Header)
 
     override fun onPageOpened(page: Page, dependencies: List<Element<*>>) {
         onPageChanged(page, dependencies)
@@ -49,7 +49,7 @@ abstract class HeaderSource<Anchor: Any, Header: Any>() : Source<HeaderSource.Da
         return if (results.any { it.data?.anchor == input }) 1 else 0
     }
 
-    override fun getElementType(data: Data<Anchor, Header>) = ELEMENT_TYPE
+    override fun getElementType(data: Data<Anchor, Header>): Int = ELEMENT_TYPE
 
     /**
      * Implement to extract headers and anchors from the list of dependency data.
@@ -58,12 +58,12 @@ abstract class HeaderSource<Anchor: Any, Header: Any>() : Source<HeaderSource.Da
      */
     protected abstract fun computeHeaders(page: Page, list: List<Anchor>): List<Data<Anchor, Header>>
 
-    companion object {
+    public companion object {
 
         /**
          * The element type used by this source.
          * Can be changed by overriding [getElementType].
          */
-        public const val ELEMENT_TYPE = 127831782
+        public const val ELEMENT_TYPE: Int = 127831782
     }
 }

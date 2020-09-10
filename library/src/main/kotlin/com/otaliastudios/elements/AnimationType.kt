@@ -3,10 +3,10 @@ package com.otaliastudios.elements
 /**
  * The animation type.
  */
-enum class AnimationType {
+public enum class AnimationType {
     ADD, REMOVE;
 
-    fun isAdd() = this == ADD
+    public fun isAdd(): Boolean = this == ADD
 
-    fun isRemove() = this == REMOVE
+    public fun isRemove(): Boolean = this == REMOVE
 }

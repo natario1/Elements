@@ -27,7 +27,7 @@ import com.otaliastudios.elements.extensions.DividerSource
  *
  * @param T the model type
  */
-abstract class Source<T: Any> {
+public abstract class Source<T: Any> {
 
     private val map: MutableMap<Int, ResultProvider> = mutableMapOf()
     private val keys: MutableMap<Int, MutableLiveData<Any>> = mutableMapOf()
@@ -267,7 +267,7 @@ abstract class Source<T: Any> {
      * have the same contents. If they haven't, a 'item changed' animation will be performed.
      * This defaults to standard equality.
      */
-    public open fun areContentsTheSame(first: T, second: T) = first == second
+    public open fun areContentsTheSame(first: T, second: T): Boolean = first == second
 
     /**
      * Returns the change payload in the case the adapter identified a 'change' operation,
@@ -328,7 +328,7 @@ abstract class Source<T: Any> {
      * @property values the list of elements provided by the source
      * @property error an error provided by the source
      */
-    public class Result<T: Any> internal constructor(val values: List<Element<T>>, val error: Exception? = null)
+    public class Result<T: Any> internal constructor(public val values: List<Element<T>>, public val error: Exception? = null)
 
     private inner class ResultProvider(private val page: Page): MediatorLiveData<List<Element<T>>>() {
 
@@ -373,27 +373,28 @@ abstract class Source<T: Any> {
         adapters.remove(adapter)
     }
 
-    companion object {
+    @Suppress("unused")
+    public companion object {
 
         /**
          * Creates a simple [ListSource] that displays a list in a single page.
          */
-        fun <T: Any> fromList(list: List<T>, elementType: Int = 0) = ListSource(list, elementType)
+        public fun <T: Any> fromList(list: List<T>, elementType: Int = 0): Source<T> = ListSource(list, elementType)
 
         /**
          * Creates a simple [LiveDataSource] that displays results from a [LiveData]
          * object in a single page.
          */
-        fun <T: Any> fromLiveData(data: LiveData<List<T>>, elementType: Int = 0) = LiveDataSource(data, elementType)
+        public fun <T: Any> fromLiveData(data: LiveData<List<T>>, elementType: Int = 0): Source<T> = LiveDataSource(data, elementType)
 
         /**
          * Creates a [PaginationSource].
          */
-        fun forPagination(dependency: Source<*>) = PaginationSource({ it == dependency })
+        public fun forPagination(dependency: Source<*>): Source<*> = PaginationSource({ it == dependency })
 
         /**
          * Creates a [DividerSource].
          */
-        fun forDividers(dependency: Source<*>) = DividerSource({ it == dependency })
+        public fun forDividers(dependency: Source<*>): Source<*> = DividerSource({ it == dependency })
     }
 }

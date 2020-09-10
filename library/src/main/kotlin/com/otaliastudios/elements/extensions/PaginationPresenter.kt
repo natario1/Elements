@@ -13,12 +13,12 @@ import com.otaliastudios.elements.Presenter
  *
  * This must be used with an unbound adapter, so we can manage the page creation ourselves.
  */
-open class PaginationPresenter(
+public open class PaginationPresenter(
         context: Context,
         private val layout: Int
-) : Presenter<Void>(context) {
+) : Presenter<Unit>(context) {
 
-    override val elementTypes = listOf(PaginationSource.ELEMENT_TYPE)
+    override val elementTypes: List<Int> = listOf(PaginationSource.ELEMENT_TYPE)
 
     override fun onCreate(parent: ViewGroup, elementType: Int): Holder {
         return Holder(getLayoutInflater().inflate(layout, parent, false))

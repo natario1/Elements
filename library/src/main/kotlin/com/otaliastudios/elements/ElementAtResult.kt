@@ -3,17 +3,17 @@ package com.otaliastudios.elements
 /**
  * Results returned by [Adapter.elementAt].
  */
-class ElementAtResult {
+public class ElementAtResult {
 
-    lateinit var page: Page
+    public lateinit var page: Page
         internal set
 
-    lateinit var element: Element<*>
+    public lateinit var element: Element<*>
         internal set
 
-    var positionInPage: Int = 0
+    public var positionInPage: Int = 0
         internal set
 
-    var position: Int = 0
+    public var position: Int = 0
         internal set
 }

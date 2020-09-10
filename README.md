@@ -16,7 +16,7 @@ A collection of modular elements for `RecyclerView` lists, alternative to
 [Google's Paging library](https://developer.android.com/topic/libraries/architecture/paging/), designed in Kotlin with these goals in mind:
 
 ```kotlin
-implementation("com.otaliastudios:elements:0.3.7")
+implementation("com.otaliastudios:elements:0.4.0")
 ```
 
 Design features:

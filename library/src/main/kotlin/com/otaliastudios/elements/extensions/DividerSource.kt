@@ -10,21 +10,21 @@ import com.otaliastudios.elements.Source
  *
  * The divider is inserted before each item, except the first item of the first page.
  */
-class DividerSource(private val dependsOn: ((Source<*>) -> Boolean) = { true }) : Source<Any>() {
+public class DividerSource(private val dependsOn: ((Source<*>) -> Boolean) = { true }) : Source<Any>() {
 
-    companion object {
+    public companion object {
 
         /**
          * The type for the element that we provide.
          */
-        const val ELEMENT_TYPE = 1934812
+        public const val ELEMENT_TYPE: Int = 1934812
     }
 
     override fun dependsOn(source: Source<*>): Boolean {
         return dependsOn.invoke(source)
     }
 
-    override fun getElementType(data: Any) = ELEMENT_TYPE
+    override fun getElementType(data: Any): Int = ELEMENT_TYPE
 
     override fun areItemsTheSame(first: Any, second: Any): Boolean {
         return first == second
