@@ -338,7 +338,7 @@ public final class Adapter private constructor(
         @Suppress("UNCHECKED_CAST")
         val cast = data as LiveData<List<Element<*>>>
         var firstTime = true
-        cast.observe(this, Observer {
+        cast.observe(this, {
             if (it != null) {
                 val sync = fromSavedState && firstTime
                 onSourceResults(page, source, it, sync)
@@ -409,7 +409,31 @@ public final class Adapter private constructor(
     }
 
     // We use the payloads version.
-    override fun onBindViewHolder(holder: Presenter.Holder, position: Int) {}
+    override fun onBindViewHolder(holder: Presenter.Holder, position: Int): Unit = Unit
+
+    override fun onFailedToRecycleView(holder: Presenter.Holder): Boolean {
+        onUnbindViewHolder(holder)
+        return false
+    }
+
+    override fun onViewRecycled(holder: Presenter.Holder) {
+        onUnbindViewHolder(holder)
+    }
+
+    private fun onUnbindViewHolder(holder: Presenter.Holder) {
+        val presenter = typeMap.get(holder.itemViewType)
+        presenter.onUnbind(holder)
+    }
+
+    override fun onViewAttachedToWindow(holder: Presenter.Holder) {
+        val presenter = typeMap.get(holder.itemViewType)
+        presenter.onAttach(holder)
+    }
+
+    override fun onViewDetachedFromWindow(holder: Presenter.Holder) {
+        val presenter = typeMap.get(holder.itemViewType)
+        presenter.onDetach(holder)
+    }
 
     /**
      * Request a new page to be opened.
