@@ -114,6 +114,29 @@ public abstract class Presenter<T: Any>(
     }
 
     /**
+     * Called when the [Holder] is unbound from the element that was applied during [onBind].
+     * Every [onBind] call is followed by an [onUnbind] call later on. This can be used to release
+     * resources.
+     */
+    @UiThread
+    public open fun onUnbind(holder: Holder): Unit = Unit
+
+    /**
+     * Called after [onBind], when the [Holder] is attached to the view hierarchy and is about to
+     * be visible to the user.
+     */
+    @UiThread
+    public open fun onAttach(holder: Holder): Unit = Unit
+
+    /**
+     * Called when the [Holder] is detached from the view hierarchy that was attached during [onAttach].
+     * Every [onAttach] call is followed by an [onDetach] call later on. At this point the holder
+     * is not visible anymore.
+     */
+    @UiThread
+    public open fun onDetach(holder: Holder): Unit = Unit
+
+    /**
      * Called to understand whether we should perform animations for the given animation type
      * and for the given holder. Presenters have fine grained control over what is animated and
      * how.

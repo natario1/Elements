@@ -16,7 +16,10 @@ These are the main tasks:
 |----|--------|-----------|
 |Holder creation|`onCreate(ViewGroup, Int)`|Here you must provide a `Holder` instance, typically inflating a layout resource.|
 |Holder initialization|`onInitialize(Holder, Int)`|The holder was created. You can perform here initialization task that do not depend on data (like color filters to icon), or add Views and object to the Holder cache using `Holder.set(key, data)` and `Holder.get(key)`.|
-|Binding|`onBind(Page, Holder, Element<T>)`|Bind data, contained in the given `Element`, to the view held by `Holder`.|
+|Binding holder to data|`onBind(Page, Holder, Element<T>)`|Bind data, contained in the given `Element`, to the view held by `Holder`.|
+|Attaching holder to hierarchy|`onAttach(Holder)`|Called when holder is attached to the view hierarchy and is about to be visible.|
+|Detaching holder from hierarchy|`onDetach(Holder)`|Called when holder is detached from the view hierarchy and is invisible.|
+|Unbinding holder from data|`onUnbind(Holder)`|Called when the holder is unbound from the `Element` data. Can be used to release resources acquired during `onBind`.|
 
 Presenters also **accept a click listener** that will be automatically added to each view.
 The click listener will be added to the root view of the Holder, or, if found, to a child view that
